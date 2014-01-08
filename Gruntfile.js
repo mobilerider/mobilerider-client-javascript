@@ -16,8 +16,11 @@ grunt.initConfig({
     },
     concat: {
         browser: {
-            src: ['tmp/**/*.js'],
             dest: 'dist/mobilerider-client.js'
+                src: [
+                    'node_modules/es6-promise/dist/promise-*.amd.js',
+                    'tmp/**/*.js'
+                ],
         }
     }
 });
