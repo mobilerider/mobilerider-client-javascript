@@ -1,7 +1,6 @@
 module.exports = function (grunt) {
+    require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
 
-grunt.loadNpmTasks('grunt-contrib-concat');
-grunt.loadNpmTasks('grunt-es6-module-transpiler');
 
 grunt.initConfig({
     transpile: {
