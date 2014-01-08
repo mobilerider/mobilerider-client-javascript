@@ -1,0 +1,25 @@
+{
+  "name": "mobilerider-client-javascript",
+  "author": "Armando Perez Marques <armando.perez@mobilerider.com>",
+  "description": "MobileRider Networks API client for Javascript",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mobilerider/mobilerider-client-javascript.git"
+  },
+  "keywords": ["MobileRider", "client", "API"],
+  "main": "./source/main.js",
+  "devDependencies": {
+    "grunt": "~0.4.2",
+    "grunt-cli": "~0.1.11",
+    "grunt-exec": "~0.4.3",
+    "grunt-contrib-concat": "~0.3.0",
+    "grunt-contrib-jshint": "~0.8.0",
+    "grunt-contrib-nodeunit": "~0.2.2",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-es6-module-transpiler": "~0.6.0",
+    "grunt-mocha-test": "~0.8.1"
+  },
+  "dependencies": {
+    "es6-promise": "~0.1.1"
+  }
+}
