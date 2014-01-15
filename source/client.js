@@ -32,7 +32,7 @@ Client.prototype.request = function (params) {
     params.headers = this._getRequestHeaders();
     var deferred = Promises.defer();
 
-    Requests(params).then(
+    reqwest(params).then(
         function (response) {
             if (typeof response !== 'object') {
                 deferred.reject('Invalid response from the server');
