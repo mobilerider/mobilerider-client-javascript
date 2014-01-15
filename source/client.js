@@ -1,7 +1,5 @@
-define(['promises', 'requests', 'settings', 'utils'], function (Promises, Requests, Settings, Utils) {
-
 var Client = function (options) {
-    this.options = Utils.extend({}, options || {});
+    this.options = extend({}, options || {});
     if (!(this.options.appId && this.options.appSecret)) {
         throw new Error('You must provide `appId` and `appSecret` in the options.');
     }
@@ -54,7 +52,3 @@ Client.prototype.request = function (params) {
     );
     return deferred.promise;
 };
-
-return Client;
-
-});

@@ -1,23 +1,45 @@
 module.exports = function (grunt) {
     require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
 
+    var pkgConfig = grunt.file.readJSON('package.json'),
+        year = (new Date()).getFullYear();
+
     grunt.initConfig({
-        requirejs: {
-            compile: {
-                options: {
-                    almond: true,
-                    baseUrl: 'source/',
-                    out: 'dist/mobilerider-client.js',
-                    include: ['client'],
-                    paths: {
-                        'promises': '../node_modules/d.js/lib/D',
-                        'requests': '../node_modules/reqwest/src/reqwest',
-                        // 'client': 'source/client.js',
-                        // 'settings': 'source/settings',
-                        // 'settings': 'source/settings',
-                    },
-                },
+        config: {
+            pkg: pkgConfig,
+            year: year
+        },
+
+        concat: {
+            options: {
+                separator: ''
             },
+            dist: {
+                src: [
+                    'source/intro.js',
+                    'source/settings.js',
+                    'source/utils.js',
+                    'source/client.js',
+                    'source/outro.js'
+                ],
+                dest: 'dist/mobilerider-client.js'
+            }
+        },
+        uglify: {
+            dist: {
+                files: {
+                    'dist/mobilerider-client.min.js': [
+                        'node_modules/d.js/lib/D.js',
+                        'node_modules/reqwest/src/reqwest.js',
+
+                        'dist/mobilerider-client.js'
+                    ]
+                }
+            },
+            options: {
+                banner: "/* Mobilerider API Client v<%= config.pkg.version %> | " +
+                        "(c) <%= config.year %> Mobilerider Networks LLC. */\n"
+            }
         },
         karma: {
             test: {
@@ -33,9 +55,9 @@ module.exports = function (grunt) {
                         // {pattern: 'lib/**/*.js', included: false},
                         // {pattern: 'source/**/*.js', included: false},
                         {pattern: 'dist/*.js', included: false},
-                        {pattern: 'source/*.js', included: false},
-                        {pattern: 'node_modules/d.js/**/*.js', included: false},
-                        {pattern: 'node_modules/reqwest/**/*.js', included: false},
+                        {pattern: 'source/*.js', included: true},
+                        {pattern: 'node_modules/d.js/**/*.js', included: true},
+                        {pattern: 'node_modules/reqwest/**/*.js', included: true},
                         {pattern: 'test/**/*Spec.js', included: false},
                         'test/test-main.js',
                     ],
@@ -95,7 +117,8 @@ module.exports = function (grunt) {
     });
 
     grunt.registerTask('build', [
-        'requirejs:compile'
+        'concat:dist',
+        'uglify:dist'
     ]);
     grunt.registerTask('test', [
         'karma:test'
