@@ -54,16 +54,19 @@ module.exports = function (grunt) {
                     files: [
                         // {pattern: 'lib/**/*.js', included: false},
                         // {pattern: 'source/**/*.js', included: false},
-                        {pattern: 'dist/*.js', included: false},
+                        // {pattern: 'dist/*.js', included: false},
                         {pattern: 'source/*.js', included: true},
-                        {pattern: 'node_modules/d.js/**/*.js', included: true},
-                        {pattern: 'node_modules/reqwest/**/*.js', included: true},
+                        {pattern: 'node_modules/d.js/lib/D.js', included: true},
+                        {pattern: 'node_modules/reqwest/src/reqwest.js', included: true},
                         {pattern: 'test/**/*Spec.js', included: false},
                         'test/test-main.js',
                     ],
 
                     // list of files/patterns to exclude
-                    exclude: [],
+                    exclude: [
+                        'source/intro.js',
+                        'source/outro.js'
+                    ],
 
                     // test results reporter to use
                     // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
