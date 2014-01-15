@@ -1,4 +1,4 @@
-define(['client'], function (Client) {
+define([], function () {
     // sinonLog = sinon.log;
     // before(function () { sinon.log = function () { console.log.apply(console, arguments); }; });
     // after(function () { sinon.log = sinonLog; });

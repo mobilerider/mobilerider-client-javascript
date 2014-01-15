@@ -1,4 +1,4 @@
-define(['settings'], function (Settings) {
+define([], function () {
 
     describe('Settings module', function () {
 

@@ -1,4 +1,4 @@
-define(['utils'], function (Utils) {
+define([], function () {
 
     describe('Slicing...', function () {
         var array = [3, 1, 2];
