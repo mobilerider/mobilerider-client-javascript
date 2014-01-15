@@ -1,7 +1,8 @@
 define([], function () {
     return {
-        loginEndpoint: 'http://api.devmobilerider.com/api/vendor/login/',
-        mediaEndpoint: 'http://api.devmobilerider.com/api/media',
-        channelEndpoint: 'http://api.devmobilerider.com/api/channel'
+        root: 'https://api.devmobilerider.com',
+        loginEndpoint: 'https://api.devmobilerider.com/api/vendor/login/',
+        mediaEndpoint: 'https://api.devmobilerider.com/api/media',
+        channelEndpoint: 'https://api.devmobilerider.com/api/channel'
     };
 });

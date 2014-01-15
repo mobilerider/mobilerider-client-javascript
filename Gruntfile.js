@@ -57,6 +57,7 @@ module.exports = function (grunt) {
 
                     coverageReporter: {
                         reporters:[
+                            {type: 'html', dir:'coverage/'},
                             {type: 'text'}
                         ],
                     },

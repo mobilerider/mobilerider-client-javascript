@@ -1,7 +1,15 @@
 define([], function () {
 
     var nativeForEach = Array.prototype.forEach,
-        slice = Array.prototype.slice,
+        slice = function (array) {
+            return Array.prototype.slice.apply(array, Array.prototype.slice.call(arguments, 1));
+        },
+        keys = Object.keys || function (obj) {
+            if (obj !== Object(obj)) throw new TypeError('Invalid object');
+            var keys = [];
+            for (var key in obj) if (obj.hasOwnProperty(key)) keys.push(key);
+            return keys;
+        };
         each = function(obj, iterator, context) {
             if (obj === null) return;
             var i;
@@ -12,14 +20,14 @@ define([], function () {
                     if (iterator.call(context, obj[i], i, obj) === breaker) return;
                 }
             } else {
-                var keys = _.keys(obj);
-                for (i = 0, length = keys.length; i < length; i++) {
-                    if (iterator.call(context, obj[keys[i]], keys[i], obj) === breaker) return;
+                var objKeys = keys(obj);
+                for (i = 0, length = objKeys.length; i < length; i++) {
+                    iterator.call(context, obj[objKeys[i]], objKeys[i], obj);
                 }
             }
         },
         extend = function (obj) {
-            each(slice.call(arguments, 1), function(source) {
+            each(slice(arguments, 1), function(source) {
                 if (source) {
                     for (var prop in source) {
                         if (source.hasOwnProperty(prop)) {
@@ -34,6 +42,7 @@ define([], function () {
     return {
         slice: slice,
         extend: extend,
-        each: each
+        each: each,
+        keys: keys
     };
 });
