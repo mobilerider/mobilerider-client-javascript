@@ -14,6 +14,7 @@ requirejs.config({
     baseUrl: '/base',
     paths: {
         'promises': 'node_modules/d.js/lib/D',
+        'json3': 'node_modules/json3/lib/json3',
         'requests': 'node_modules/reqwest/src/reqwest',
         'client': 'source/client',
         'settings': 'source/settings',
