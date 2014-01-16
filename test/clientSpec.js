@@ -85,8 +85,6 @@ define(['client'], function (Client) {
             });
 
             it('should fail for an invalid domain', function () {
-                var fakeServer = sinon.fakeServer.create();
-
                 var client = new Client({
                     appId: 'someId',
                     appSecret: 'someSecret'
@@ -109,7 +107,7 @@ define(['client'], function (Client) {
                 expect(clientRequest).to.throwException(/^Invalid method/);
             });
 
-            it('should fail for a JSON response with `success == false`', function (done) {
+            it('should fail for a JSON response with `success == false` and empty status', function (done) {
                 fakeServer.respondWith(
                     'GET',
                     'https://api.devmobilerider.com/api/media',
@@ -134,17 +132,21 @@ define(['client'], function (Client) {
 
                 promise.then(
                     function () {
-                        expect().fail();
-                        done();
+                        done(new Error('This promise should fail'));
                     },
-                    function (status) {
-                        expect(status).to.be('Unsuccessful request (response status empty)');
+                    function (response) {
+                        expect(response).to.be.an('object');
+                        expect(response).to.have.property('success', false);
+                        expect(response).to.not.have.property('status');
+                        expect(response).to.have.property('meta');
+                        expect(response.meta).to.be.an('object');
+                        expect(response.meta).to.be.empty();
                         done();
                     }
                 );
             });
 
-            it('should fail for a JSON response with `success == false`', function (done) {
+            it('should fail for a JSON response with `success == false` and a status message', function (done) {
                 fakeServer.respondWith(
                     'GET',
                     'https://api.devmobilerider.com/api/media',
@@ -171,8 +173,12 @@ define(['client'], function (Client) {
                     function () {
                         done(new Error('This promise should fail'));
                     },
-                    function (status) {
-                        expect(status).to.be('Something went wrong!');
+                    function (response) {
+                        expect(response).to.be.an('object');
+                        expect(response).to.have.property('success', false);
+                        expect(response).to.have.property('meta');
+                        expect(response.meta).to.be.an('object');
+                        expect(response.meta).to.have.property('status', 'Something went wrong!');
                         done();
                     }
                 );
@@ -204,10 +210,13 @@ define(['client'], function (Client) {
                 promise.then(
                     function (response) {
                         var typeofResponse = typeof response;
-                        if (typeofResponse != 'undefined') {
+                        if (typeofResponse != 'object') {
                             done(new Error('Invalid response type: ' + typeofResponse));
+                        } else {
+                            expect(response).to.have.property('success', true);
+                            expect(response.meta).to.be.an('object');
+                            done();
                         }
-                        done();
                     },
                     function (response) {
                         done(new Error('Failed response'));

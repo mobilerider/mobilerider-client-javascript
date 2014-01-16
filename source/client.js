@@ -36,16 +36,47 @@ Client.prototype.request = function (params) {
 
     Requests(params).then(
         function (response) {
+            var copyKeys, result;
             if (typeof response !== 'object') {
-                deferred.reject('Invalid response from the server');
+                deferred.reject({
+                    success: false,
+                    status: 'Invalid response from the server',
+                    response: response + ''
+                });
             } else if (!response.success) {
-                if (!response.status) {
-                    deferred.reject('Unsuccessful request (response status empty)');
-                } else {
-                    deferred.reject(response.status);
-                }
+                copyKeys = ['success', 'objects'];
+                result = { meta: {} };
+                Utils.each(response, function (value, key) {
+                    if (key != 'meta') {
+                        if (copyKeys.indexOf(key) != -1) {
+                            result[key] = value;
+                        } else {
+                            result.meta[key] = value;
+                        }
+                    } else {
+                        Utils.each(response.meta, function (value, key) {
+                            result.meta[key] = value;
+                        });
+                    }
+                });
+                deferred.reject(result);
             } else {
-                deferred.resolve(response.object || response.objects);
+                copyKeys = ['success', 'object', 'objects'];
+                result = { meta: {} };
+                Utils.each(response, function (value, key) {
+                    if (key != 'meta') {
+                        if (copyKeys.indexOf(key) != -1) {
+                            result[key] = value;
+                        } else {
+                            result.meta[key] = value;
+                        }
+                    } else {
+                        Utils.each(response.meta, function (value, key) {
+                            result.meta[key] = value;
+                        });
+                    }
+                });
+                deferred.resolve(result);
             }
         },
         function (xhr) {
