@@ -1,6 +1,14 @@
-define([], function () {
+define(['json3'], function (JSON3) {
 
     var nativeForEach = Array.prototype.forEach,
+        nativeIsArray = Array.isArray,
+        toString = Object.prototype.toString,
+        isArray = nativeIsArray || function (array) {
+            return toString.call(obj) == '[object Array]';
+        },
+        isObject = function (obj) {
+            return obj === Object(obj);
+        },
         slice = function (array) {
             return Array.prototype.slice.apply(array, Array.prototype.slice.call(arguments, 1));
         },
@@ -12,7 +20,7 @@ define([], function () {
         };
         each = function(obj, iterator, context) {
             if (obj === null) return;
-            var i;
+            var i, length;
             if (nativeForEach && obj.forEach === nativeForEach) {
                 obj.forEach(iterator, context);
             } else if (obj.length === +obj.length) {
@@ -43,6 +51,12 @@ define([], function () {
         slice: slice,
         extend: extend,
         each: each,
-        keys: keys
+        keys: keys,
+        isArray: isArray,
+        isObject: isObject,
+        JSON: {
+            stringify: JSON3.stringify,
+            parse: JSON3.parse
+        }
     };
 });
