@@ -30,8 +30,15 @@ Client.prototype.request = function (params) {
         throw new Error('Invalid method: ' + params.method);
     }
 
-    params.type = 'json';
-    params.headers = this._getRequestHeaders();
+    params = Utils.extend(
+        {
+            type: 'json',
+            contentType: 'application/json',
+            headers: this._getRequestHeaders()
+        },
+        params
+    );
+
     var deferred = Promises.defer();
 
     Requests(params).then(
@@ -80,7 +87,7 @@ Client.prototype.request = function (params) {
             }
         },
         function (xhr) {
-            deferred.reject(xhr.statusText + ': ' + xhr.responseText);
+            deferred.reject('(' + xhr.status + ') ' + xhr.statusText + ': ' + xhr.responseText);
         }
     );
     return deferred.promise;
