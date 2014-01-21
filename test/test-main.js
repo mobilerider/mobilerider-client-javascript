@@ -3,6 +3,7 @@ var Karma = window.__karma__ || window.karma;
 var testModules = [];
 for (var file in Karma.files) {
     if (Karma.files.hasOwnProperty(file)) {
+        // change this regex to /SpecLive\.js$/ to run the live (non-fakeserver) tests
         if (/Spec\.js$/.test(file)) {
             testModules.push(file);
         }
@@ -20,7 +21,8 @@ requirejs.config({
         'settings': 'source/settings',
         'utils': 'source/utils',
         'query': 'source/query',
-        'resource': 'source/resource'
+        'resource': 'source/resource',
+        'channel-resource': 'source/channel-resource'
     },
 
     // ask Require.js to load these files (all our tests)

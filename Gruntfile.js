@@ -39,6 +39,7 @@ module.exports = function (grunt) {
                         {pattern: 'node_modules/reqwest/src/*.js', included: false},
                         {pattern: 'node_modules/json3/lib/*.js', included: false},
                         {pattern: 'test/**/*Spec.js', included: false},
+                        {pattern: 'test/**/*SpecLive.js', included: false},
                         'test/test-main.js',
                     ],
 
