@@ -2,10 +2,13 @@ define(['json3'], function (JSON3) {
 
     var nativeForEach = Array.prototype.forEach,
         nativeIsArray = Array.isArray,
+        nativeSome = Array.prototype.some,
         toString = Object.prototype.toString,
+        nativeMap = Array.prototype.map,
         isArray = nativeIsArray || function (array) {
             return toString.call(obj) == '[object Array]';
         },
+        breaker = {},
         isObject = function (obj) {
             return obj === Object(obj);
         },
@@ -19,7 +22,7 @@ define(['json3'], function (JSON3) {
             return keys;
         };
         each = function(obj, iterator, context) {
-            if (obj === null) return;
+            if (obj === null || typeof obj == 'undefined') return;
             var i, length;
             if (nativeForEach && obj.forEach === nativeForEach) {
                 obj.forEach(iterator, context);
@@ -45,6 +48,36 @@ define(['json3'], function (JSON3) {
                 }
             });
             return obj;
+        },
+        identity = function(value) { return value; },
+        any = function(obj, iterator, context) {
+            iterator = iterator || identity;
+            var result = false;
+            if (obj === null) {
+                return result;
+            }
+            if (nativeSome && obj.some === nativeSome) {
+                return obj.some(iterator, context);
+            }
+            each(obj, function(value, index, list) {
+                if (result || (result = iterator.call(context, value, index, list))) {
+                    return breaker;
+                }
+            });
+            return !!result;
+        },
+        map = function(obj, iterator, context) {
+            var results = [];
+            if (obj === null) {
+                return results;
+            }
+            if (nativeMap && obj.map === nativeMap) {
+                return obj.map(iterator, context);
+            }
+            each(obj, function(value, index, list) {
+                results.push(iterator.call(context, value, index, list));
+            });
+            return results;
         };
 
     return {
@@ -54,6 +87,9 @@ define(['json3'], function (JSON3) {
         keys: keys,
         isArray: isArray,
         isObject: isObject,
+        any: any,
+        some: any,
+        map: map,
         JSON: {
             stringify: JSON3.stringify,
             parse: JSON3.parse

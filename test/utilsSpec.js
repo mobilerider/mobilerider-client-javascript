@@ -77,6 +77,28 @@ define(['utils'], function (Utils) {
         });
     });
 
+    describe('#any', function () {
+        it('shoud find the first and only the first ocurrence of a value that passes the test', function () {
+            var count = 0, found = Utils.any([1, 2, 3, 4, 5], function (value) {
+                count += 1;
+                return value > 3;
+            });
+            expect(found).to.be.ok();
+            expect(count).to.be(4);
+        });
+    });
+
+    describe('#map', function () {
+        it('should double each element of the collection', function () {
+            var count = 0, doubled = Utils.map([1, 2, 3, 4, 5], function (value) {
+                count += 1;
+                return value * 2;
+            });
+            expect(doubled).to.eql([2, 4, 6, 8, 10]);
+            expect(count).to.be(5);
+        });
+    });
+
     describe('Imported utilities...', function () {
 
         it('shoud have JSON stringify/parse functions', function () {
