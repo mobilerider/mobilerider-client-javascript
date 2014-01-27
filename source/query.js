@@ -143,7 +143,6 @@ Operator.prototype.flatten = function () {
 };
 
 var Query = function (resource, operator_or_filters, fields) {
-    // TODO: Add only(*fields) methods
     if (typeof fields == 'string') {
         this.fields = [fields];
     } else {
