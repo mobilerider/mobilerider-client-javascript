@@ -167,11 +167,11 @@ define(['settings', 'client', 'resource', 'channel-resource'], function (Setting
                     [
                         200,
                         'application/json',
-                        '{"success": true, "object": {"id": 1, "name": "My channel\'s title"}}'
+                        '{"success": true, "objects": [{"id": 1, "name": "My channel\'s title"}]}'
                     ]
                 );
 
-                var objectToCreate = { name: 'My first channels title'};
+                var objectToCreate = { name: 'My channel\'s title'};
 
                 var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
                 channel.create(objectToCreate).then(
@@ -182,7 +182,7 @@ define(['settings', 'client', 'resource', 'channel-resource'], function (Setting
                         expect(channelResponse).to.have.property('meta');
                         expect(channelResponse.meta).to.be.an('object');
                         expect(channelResponse).to.have.property('objects');
-                        expect(channelResponse.objects).to.be.an('Array');
+                        expect(channelResponse.objects).to.be.an(Array);
                         expect(channelResponse.objects).to.have.length(1);
                         expect(channelResponse.objects[0]).to.have.property('id', 1);
                         expect(channelResponse.objects[0]).to.have.property('name', 'My channel\'s title');
