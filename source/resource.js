@@ -1,4 +1,4 @@
-define(['utils', 'client'], function (Utils, Client) {
+define(['utils', 'client', 'query'], function (Utils, Client, Query) {
 
 var Resource = function (options) {
     options = options || {};
@@ -90,9 +90,14 @@ Resource.prototype.delete = function (id) {
     return this.client.request({ url: this.getUrl(id), method: 'DELETE' });
 };
 
-Resource.prototype.all = function () {
+Resource.prototype.all = function (data) {
     // Return a promise that when resolved returns all the instances of the resource
-    return this.client.request({ url: this.getUrl(), method: 'GET' });
+    return this.client.request({ url: this.getUrl(), method: 'GET', data: data });
+};
+
+Resource.prototype.filter = function (filters) {
+    var query = new Query(this, filters);
+    return query;
 };
 
 return Resource;
