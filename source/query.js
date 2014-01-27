@@ -142,9 +142,13 @@ Operator.prototype.flatten = function () {
     return output;
 };
 
-var Query = function (resource, operator_or_filters) {
+var Query = function (resource, operator_or_filters, fields) {
     // TODO: Add only(*fields) methods
-
+    if (typeof fields == 'string') {
+        this.fields = [fields];
+    } else {
+        this.fields = Utils.slice(fields || []);
+    }
     this.resource = resource;
     if (operator_or_filters instanceof Operator) {
         this.operator = operator_or_filters.clone();
@@ -154,7 +158,7 @@ var Query = function (resource, operator_or_filters) {
 };
 
 Query.prototype.clone = function () {
-    return new Query(this.resource, this.operator.clone());
+    return new Query(this.resource, this.operator.clone(), this.fields);
 };
 
 Query.prototype.and = function () {
@@ -190,6 +194,12 @@ Query.prototype.not = function (filters) {
     return cloned;
 };
 
+Query.prototype.only = function () {
+    var cloned = this.clone();
+    cloned.fields = Utils.slice(arguments);
+    return cloned;
+};
+
 Query.prototype.fetch = function () {
     var self = this;
     if (this.operator.name == 'AND' && !Utils.any(this.operator.filters, function (filter) {
@@ -200,10 +210,14 @@ Query.prototype.fetch = function () {
         }));
     }
 
+    var jsonQuery = {
+        filters: this.operator.flatten()
+    };
+    if (this.fields.length) {
+        jsonQuery.fields = Utils.slice(this.fields);
+    }
     return this.resource.all({
-        __queryset__: Utils.JSON.stringify({
-            filters: this.operator.flatten()
-        })
+        __queryset__: Utils.JSON.stringify(jsonQuery)
     });
 };
 

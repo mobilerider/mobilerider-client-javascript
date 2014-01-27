@@ -96,5 +96,45 @@ define(['utils', 'channel-resource'], function (Utils, ChannelResource) {
             expect(flattened[2].NOT).to.be.an('object');
             expect(flattened[2].NOT).to.have.property('age', 19);
         });
+
+        it('should construct the proper JSON for the requested query: Using only a subset of fields', function () {
+            var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+            var channelAllSpy = sinon.spy(channel, 'all');
+
+            var query = channel.filter([['title__contains', 'test']]).or({title__contains: 'something'}).not({age: 19}).only('id', 'name');
+            expect(query.operator).to.be.an('object');
+            var flattened = query.operator.flatten();
+            expect(flattened).to.be.an(Array);
+            expect(flattened).to.have.length(3);
+            expect(flattened[1]).to.eql('AND');
+            expect(flattened[0]).to.be.an(Array);
+            expect(flattened[0][1]).to.eql('OR');
+
+            expect(Utils.any(flattened[0], function (operator) {
+                return (operator.title__contains == 'test');
+            })).to.be.ok();
+            expect(Utils.any(flattened[0], function (operator) {
+                return (operator.title__contains == 'something');
+            })).to.be.ok();
+
+            expect(flattened[2]).to.be.an('object');
+            expect(flattened[2]).to.have.property('NOT');
+            expect(flattened[2].NOT).to.be.an('object');
+            expect(flattened[2].NOT).to.have.property('age', 19);
+
+            var promise = query.fetch();
+            expect(promise.then).to.be.a('function');
+            expect(channelAllSpy.calledOnce).to.be.ok();
+            var channelAllSpyCallArgs = channelAllSpy.getCall(0).args;
+            expect(channelAllSpyCallArgs[0]).to.be.an('object');
+            expect(channelAllSpyCallArgs[0]).to.have.property('__queryset__');
+
+            var jsonQuery = Utils.JSON.parse(channelAllSpyCallArgs[0].__queryset__);
+            expect(jsonQuery).to.have.property('fields');
+            expect(jsonQuery.fields).to.be.an(Array);
+            expect(jsonQuery.fields).to.eql(['id', 'name']);
+
+            channelAllSpy.restore();
+        });
     });
 });
