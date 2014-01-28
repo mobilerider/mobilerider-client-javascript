@@ -10,7 +10,7 @@ ChannelResource.prototype.constructor = ChannelResource;
 
 ChannelResource.prototype.getUrl = function (id) {
     id = typeof id != 'undefined' ? this.validateId(id) : id;
-    var url = Settings.channelEndpoint;
+    var url = Settings.endpointPrefix + '/channel';
     if (url[url.length - 1] != '/' && !!id) {
         url += ('/' + id);
     }

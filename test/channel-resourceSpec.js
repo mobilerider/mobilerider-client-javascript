@@ -21,8 +21,7 @@ describe('ChannelResource', function () {
 
     it('should have a valid URL', function () {
         var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
-        var url = Settings.channelEndpoint;
-        expect(channel.getUrl()).to.eql(url);
+        var url = channel.getUrl();
 
         if (url[url.length - 1] != '/') {
             url += '/';
