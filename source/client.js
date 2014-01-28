@@ -1,4 +1,4 @@
-define(['promises', 'requests', 'settings', 'utils'], function (Promises, Requests, Settings, Utils) {
+var Client = (function () {
 
 var Client = function (options) {
     this.options = Utils.extend({}, options || {});
@@ -95,4 +95,4 @@ Client.prototype.request = function (params) {
 
 return Client;
 
-});
+})();

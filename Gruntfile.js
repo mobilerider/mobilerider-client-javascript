@@ -1,25 +1,54 @@
 module.exports = function (grunt) {
     require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);
 
+    var pkgConfig = grunt.file.readJSON('package.json'),
+        year = (new Date()).getFullYear(),
+        // Bundled libraries
+        librariesFiles = [
+            'node_modules/reqwest/src/reqwest.js',
+            'node_modules/d.js/lib/D.js',
+            'node_modules/json3/lib/json3.js',
+        ],
+        // Our modules
+        sourceFiles = [
+            'source/settings.js',
+            'source/utils.js',
+            'source/client.js',
+            'source/query.js',
+            'source/resource.js',
+            'source/channel-resource.js',
+            'source/media-resource.js',
+        ];
+
     grunt.initConfig({
-        requirejs: {
-            compile: {
-                options: {
-                    almond: true,
-                    baseUrl: 'source/',
-                    out: 'dist/mobilerider-client.js',
-                    include: ['client'],
-                    paths: {
-                        'promises': '../node_modules/d.js/lib/D',
-                        'requests': '../node_modules/reqwest/src/reqwest',
-                        'json3': '../node_modules/json3/lib/json3',
-                        // 'client': 'source/client.js',
-                        // 'settings': 'source/settings',
-                        // 'settings': 'source/settings',
-                    },
-                },
+        config: {
+            pkg: pkgConfig,
+            year: year
+        },
+
+        concat: {
+            options: {
+                separator: ''
+            },
+            dist: {
+                src: ['source/intro.js'].concat(librariesFiles).concat(sourceFiles).concat(['source/outro.js']),
+                dest: 'dist/mobilerider-client.js'
             },
         },
+        uglify: {
+            dist: {
+                files: {
+                    'dist/mobilerider-client.min.js': [
+                        'dist/mobilerider-client.js'
+                    ]
+                }
+            },
+            options: {
+                banner: "/* Mobilerider API Client v<%= config.pkg.version %> | " +
+                        "(c) <%= config.year %> Mobilerider Networks LLC. */\n"
+            }
+        },
+
         karma: {
             test: {
                 options: {
@@ -27,21 +56,12 @@ module.exports = function (grunt) {
                     basePath: '',
 
                     // frameworks to use
-                    frameworks: ['mocha', 'requirejs', 'chai', 'sinon', 'expect'],
+                    frameworks: ['mocha', 'chai', 'sinon', 'expect'],
 
                     // list of files / patterns to load in the browser
-                    files: [
-                        // {pattern: 'lib/**/*.js', included: false},
-                        // {pattern: 'source/**/*.js', included: false},
-                        {pattern: 'dist/*.js', included: false},
-                        {pattern: 'source/*.js', included: false},
-                        {pattern: 'node_modules/d.js/lib/*.js', included: false},
-                        {pattern: 'node_modules/reqwest/src/*.js', included: false},
-                        {pattern: 'node_modules/json3/lib/*.js', included: false},
-                        {pattern: 'test/**/*Spec.js', included: false},
-                        {pattern: 'test/**/*SpecLive.js', included: false},
-                        'test/test-main.js',
-                    ],
+                    // Use array concatenation to enforce a specific inclusion order
+                    files: librariesFiles.concat(sourceFiles).concat(['test/**/*Spec.js']),
+                    // add `.concat(['test/**/*SpecLive.js'])` to enable live tests
 
                     // list of files/patterns to exclude
                     exclude: [],
@@ -54,8 +74,7 @@ module.exports = function (grunt) {
                     // The coverage data will be stored into the "coverage/" folder
                     // both in HTML and JSON format
                     preprocessors: {
-                        'source/*.js': ['coverage'],
-                        'dist/*.js': ['coverage'],
+                        'source/**/*.js': ['coverage'],
                     },
 
                     coverageReporter: {
@@ -98,7 +117,7 @@ module.exports = function (grunt) {
     });
 
     grunt.registerTask('build', [
-        'requirejs:compile'
+        'concat:dist', 'uglify'
     ]);
     grunt.registerTask('test', [
         'karma:test'

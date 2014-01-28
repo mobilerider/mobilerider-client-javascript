@@ -1,4 +1,4 @@
-define(['utils', 'client', 'query'], function (Utils, Client, Query) {
+var Resource = (function () {
 
 var Resource = function (options) {
     options = options || {};
@@ -102,4 +102,4 @@ Resource.prototype.filter = function (filters) {
 
 return Resource;
 
-});
+})();

@@ -1,10 +1,11 @@
-define(['resource', 'utils', 'settings'], function (Resource, Utils, Settings) {
+var ChannelResource = (function () {
 
 var ChannelResource = function () {
     Resource.apply(this, arguments);
 };
 
-ChannelResource.prototype = Resource.prototype;
+Utils.extend(ChannelResource.prototype, Resource.prototype, ChannelResource.prototype);
+
 ChannelResource.prototype.constructor = ChannelResource;
 
 ChannelResource.prototype.getUrl = function (id) {
@@ -16,8 +17,6 @@ ChannelResource.prototype.getUrl = function (id) {
     return url;
 };
 
-Utils.extend(ChannelResource.prototype, Resource.prototype, ChannelResource.prototype);
-
 return ChannelResource;
 
-});
+})();

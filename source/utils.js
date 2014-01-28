@@ -1,5 +1,4 @@
-define(['json3'], function (JSON3) {
-
+var Utils = (function () {
     var nativeForEach = Array.prototype.forEach,
         nativeIsArray = Array.isArray,
         nativeSome = Array.prototype.some,
@@ -95,4 +94,4 @@ define(['json3'], function (JSON3) {
             parse: JSON3.parse
         }
     };
-});
+})();

@@ -1,4 +1,4 @@
-define(['utils'], function (Utils) {
+var Query = (function () {
 
 var LOOKUPS_LIST = [
     'exact', 'iexact', 'contains', 'icontains', 'in', 'gt', 'gte', 'lt', 'lte',
@@ -222,4 +222,4 @@ Query.prototype.fetch = function () {
 
 return Query;
 
-});
+})();
