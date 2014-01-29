@@ -2,7 +2,7 @@ describe('ChannelResource#filter', function () {
 
     it('should return a Query object', function () {
         var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
-        var query = channel.filter([]);
+        var query = channel.filter();
         expect(query).to.be.an('object');
         expect(query).to.have.property('resource');
         expect(query).to.have.property('operator');
@@ -14,7 +14,7 @@ describe('ChannelResource#filter', function () {
 
     it('should return a Query object with a properly initialized operator', function () {
         var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
-        var query = channel.filter([['name', 'John'], ['age', 49]]);
+        var query = channel.filter(['name', 'John'], ['age', 49]);
         expect(query).to.be.an('object');
         expect(query).to.have.property('resource');
         expect(query).to.have.property('operator');
@@ -43,7 +43,7 @@ describe('ChannelResource#filter', function () {
 
     it('should construct the proper JSON for the requested query', function () {
         var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
-        var query = channel.filter([['title__contains', 'test']]);
+        var query = channel.filter(['title__contains', 'test']);
         query = query.or({title__contains: 123}).or({title: 'something?'}).and({age: 19});
         expect(query.operator).to.be.an('object');
         var flattened = query.operator.flatten();
@@ -71,7 +71,7 @@ describe('ChannelResource#filter', function () {
 
     it('should construct the proper JSON for the requested query: Using NOT', function () {
         var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
-        var query = channel.filter([['title__contains', 'test']]).or({title__contains: 'something'}).not({age: 19});
+        var query = channel.filter(['title__contains', 'test']).or({title__contains: 'something'}).not({age: 19});
         expect(query.operator).to.be.an('object');
         var flattened = query.operator.flatten();
         expect(flattened).to.be.an.instanceof(Array);
@@ -120,7 +120,7 @@ describe('ChannelResource#filter', function () {
         var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
         var channelAllSpy = sinon.spy(channel, 'all');
 
-        var query = channel.filter([['title__contains', 'test']]).or({title__contains: 'something'}).not({age: 19}).only('id', 'name');
+        var query = channel.filter(['title__contains', 'test']).or({title__contains: 'something'}).not({age: 19}).only('id', 'name');
         expect(query.operator).to.be.an('object');
         var flattened = query.operator.flatten();
         expect(flattened).to.be.an.instanceof(Array);
