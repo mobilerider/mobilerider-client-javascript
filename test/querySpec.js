@@ -91,7 +91,6 @@ describe('ChannelResource#filter', function () {
         expect(flattened[2]).to.have.property('NOT');
         expect(flattened[2].NOT).to.be.an('object');
         expect(flattened[2].NOT).to.have.property('age', 19);
-        console.log(Utils.JSON.stringify(flattened));
 
         query = query.not({age: 40});
         expect(query.operator).to.be.an('object');
@@ -100,7 +99,6 @@ describe('ChannelResource#filter', function () {
         expect(flattened).to.have.length(3);
         expect(flattened[1]).to.eql('AND');
         expect(flattened[0]).to.be.an.instanceof(Array);
-        console.log(Utils.JSON.stringify(flattened));
         expect(flattened[0][1]).to.eql('OR');
 
         expect(Utils.any(flattened[0], function (operator) {

@@ -96,7 +96,6 @@ Operator.prototype.addFilters = function (filters) {
     Utils.each(filters, function (value, key) {
         if (Utils.isArray(value)) {
             if (value.length != 2) {
-                console.log(args);
                 throw new TypeError('Filters must be in the form of `["field_name", "filter_value"]`. Got: ' + value.toString());
             }
             self.validateField(value[0]);
