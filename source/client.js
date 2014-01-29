@@ -22,7 +22,7 @@ Client.prototype.request = function (params) {
         }
     }
 
-    if (params.url.indexOf(Settings.root) !== 0) {
+    if (params.url.indexOf(Settings.endpointPrefix) !== 0) {
         throw new Error('Invalid URL: ' + params.url);
     }
 
