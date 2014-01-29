@@ -59,7 +59,7 @@ var Operator = function (name, filters) {
     if (name != 'AND' && name != 'OR' && name != 'NOT') {
         throw new TypeError('Operator: Invalid operator name: ' + name);
     }
-    var arrayLike = (filters.length == +filters.length);
+    var arrayLike = filters && (filters.length == +filters.length);
     if (typeof filters != 'undefined' && arrayLike && typeof filters == 'string') {
         throw new TypeError('If present the `filters` parameter must be an Array');
     }
@@ -92,29 +92,30 @@ Operator.prototype.validateField = function (fieldName) {
 Operator.prototype.addFilters = function (filters) {
     var self = this;
     args = arguments;
-    this.filters = this.filters.concat(Utils.map(filters, function (value, key) {
+    var newFilters = [];
+    Utils.each(filters, function (value, key) {
         if (Utils.isArray(value)) {
             if (value.length != 2) {
+                console.log(args);
                 throw new TypeError('Filters must be in the form of `["field_name", "filter_value"]`. Got: ' + value.toString());
             }
             self.validateField(value[0]);
-            return tupleToObj(value);
+            newFilters.push(tupleToObj(value));
         } else if (value instanceof Operator) {
-            return value.clone();
+            newFilters.push(value.clone());
         } else if (typeof key == 'string') {
             self.validateField(key);
-            return tupleToObj(key, value);
+            newFilters.push(tupleToObj(key, value));
         } else if (Utils.isObject(value)) {
-            var filtersFromObj = Utils.map(value, function (objValue, objKey) {
+            Utils.each(value, function (objValue, objKey) {
                 self.validateField(objKey);
-                return tupleToObj(objKey, objValue);
+                newFilters.push(tupleToObj(objKey, objValue));
             });
-            self.filters = self.filters.concat(Utils.slice(filtersFromObj, 1));
-            return filtersFromObj[0];
         } else {
-            throw new TypeError('Invalid filter: ' + value.toString());
+            throw new TypeError('Invalid filter: ' + Utils.JSON.stringify(value));
         }
-    }));
+    });
+    this.filters = this.filters.concat(newFilters);
 };
 
 Operator.prototype.flatten = function () {
@@ -162,36 +163,48 @@ Query.prototype.clone = function () {
 
 Query.prototype.and = function () {
     var cloned = this.clone();
-    if (cloned.operator.name != 'AND') {
-        cloned.operator = new Operator('AND', [cloned.operator]);
+    if (cloned.operator.filters.length) {
+        if (cloned.operator.name != 'AND') {
+            cloned.operator = new Operator('AND', [cloned.operator]);
+        }
+        cloned.operator.addFilters(arguments);
+    } else {
+        cloned.operator = new Operator('AND', arguments);
     }
-    cloned.operator = new Operator('AND', [cloned.operator]);
-    cloned.operator.addFilters(arguments);
     return cloned;
 };
 
 Query.prototype.filter = Query.prototype.and;
 
-Query.prototype.or = function (filters) {
+Query.prototype.or = function () {
     var cloned = this.clone();
-    if (cloned.operator.name != 'OR') {
-        cloned.operator = new Operator('OR', [cloned.operator]);
+    if (cloned.operator.filters.length) {
+        if (cloned.operator.name != 'OR') {
+            cloned.operator = new Operator('OR', [cloned.operator]);
+        }
+        cloned.operator.addFilters(arguments);
+    } else {
+        cloned.operator = new Operator('OR', arguments);
     }
-    cloned.operator.addFilters(arguments);
     return cloned;
 };
 
-Query.prototype.not = function (filters) {
+Query.prototype.not = function () {
     var cloned = this.clone();
-    if (cloned.operator.name != 'NOT') {
-        // cloned.operator = new Operator('NOT', [cloned.operator]);
-        cloned.operator = new Operator('AND', [cloned.operator]);
-        cloned.operator.addFilters([new Operator('NOT', [new Operator('AND', arguments)])]);
+    if (cloned.operator.filters.length) {
+        if (cloned.operator.name != 'NOT') {
+            cloned.operator = new Operator('AND', [cloned.operator]);
+            cloned.operator.addFilters([new Operator('NOT', [new Operator('AND', arguments)])]);
+        } else {
+            cloned.operator.addFilters(arguments);
+        }
     } else {
-        cloned.operator.addFilters(arguments);
+        cloned.operator = new Operator('NOT', [new Operator('AND', arguments)]);
     }
     return cloned;
 };
+
+Query.prototype.exclude = Query.prototype.not;
 
 Query.prototype.only = function () {
     var cloned = this.clone();
