@@ -95,9 +95,13 @@ Resource.prototype.all = function (data) {
     return this.client.request({ url: this.getUrl(), method: 'GET', data: data });
 };
 
-Resource.prototype.filter = function (filters) {
-    var query = new Query(this, filters);
-    return query;
+Resource.prototype.filter = function () {
+    return new Query(this, arguments);
+};
+
+Resource.prototype.exclude = function () {
+    var query = this.filter();
+    return query.not.apply(query, Utils.slice(arguments));
 };
 
 return Resource;
