@@ -191,11 +191,14 @@ Query.prototype.or = function () {
 Query.prototype.not = function () {
     var cloned = this.clone();
     if (cloned.operator.filters.length) {
-        if (cloned.operator.name != 'NOT') {
+        if (cloned.operator.name == 'AND') {
+            cloned.operator.addFilters([new Operator('NOT', arguments)]);
+        } else
+        if (cloned.operator.name == 'NOT') {
+            cloned.operator.addFilters(arguments);
+        } else {
             cloned.operator = new Operator('AND', [cloned.operator]);
             cloned.operator.addFilters([new Operator('NOT', [new Operator('AND', arguments)])]);
-        } else {
-            cloned.operator.addFilters(arguments);
         }
     } else {
         cloned.operator = new Operator('NOT', [new Operator('AND', arguments)]);
@@ -212,17 +215,24 @@ Query.prototype.only = function () {
 };
 
 Query.prototype.fetch = function () {
-    var self = this;
-    if (this.operator.name == 'AND' && !Utils.any(this.operator.filters, function (filter) {
-        return !Utils.isArray(filter);
+    var self = this,
+        flattened = this.operator.flatten();
+    if (!Utils.any(flattened, function (component) {
+        return (component != 'AND' && (Utils.isArray(component) || !Utils.isObject(component) || !!component.NOT ));
     })) {
-        return self.resource.all(Utils.map(self.operator.filters, function (filter) {
-            return { name: filter[0], value: filter[1] };
-        }));
+        var params = [];
+        Utils.each(flattened, function (component) {
+            if (Utils.isObject(component)) {
+                Utils.each(component, function (v, k) {
+                    params.push({ name: k, value: v });
+                });
+            }
+        });
+        return self.resource.all(params);
     }
 
     var jsonQuery = {
-        filters: this.operator.flatten()
+        filters: flattened
     };
     if (this.fields.length) {
         jsonQuery.fields = Utils.slice(this.fields);

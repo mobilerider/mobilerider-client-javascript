@@ -96,7 +96,7 @@ describe('ChannelResource#filter', function () {
         expect(query.operator).to.be.an('object');
         flattened = query.operator.flatten();
         expect(flattened).to.be.an.instanceof(Array);
-        expect(flattened).to.have.length(3);
+        expect(flattened).to.have.length(5);
         expect(flattened[1]).to.eql('AND');
         expect(flattened[0]).to.be.an.instanceof(Array);
         expect(flattened[0][1]).to.eql('OR');
@@ -114,9 +114,40 @@ describe('ChannelResource#filter', function () {
         expect(flattened[2].NOT).to.have.property('age', 19);
     });
 
+    var returnFakePromise = function () {
+        return { then: function (onSuccess) { setTimeout(onSuccess, 1); } };
+    };
+
+    it('should not use the JSON __queryset__ parameter for single-level `AND` queries', function (done) {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
+
+        channel.filter({ name__contains: 'test', description__contains: 'test' }).fetch().then(
+            function () {
+                done();
+            }
+        );
+
+        expect(channelAllStub.calledOnce).to.be.ok;
+        var channelAllStubCallArgs = channelAllStub.getCall(0).args;
+        expect(channelAllStubCallArgs[0]).to.be.an.instanceof(Array);
+        Utils.each(channelAllStubCallArgs[0], function (param) {
+            expect(param).to.be.an('object');
+            expect(param).not.to.be.an.instanceof(Array);
+        });
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+
+            return param.name == 'name__contains' && param.value == 'test';
+        })).to.be.ok;
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+            return param.name = 'description__contains' && param.value == 'test';
+        })).to.be.ok;
+        channelAllStub.restore();
+    });
+
     it('should construct the proper JSON for the requested query: Using only a subset of fields', function () {
         var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
-        var channelAllSpy = sinon.spy(channel, 'all');
+        var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
 
         var query = channel.filter(['title__contains', 'test']).or({title__contains: 'something'}).not({age: 19}).only('id', 'name');
         expect(query.operator).to.be.an('object');
@@ -141,16 +172,16 @@ describe('ChannelResource#filter', function () {
 
         var promise = query.fetch();
         expect(promise.then).to.be.a('function');
-        expect(channelAllSpy.calledOnce).to.be.ok;
-        var channelAllSpyCallArgs = channelAllSpy.getCall(0).args;
-        expect(channelAllSpyCallArgs[0]).to.be.an('object');
-        expect(channelAllSpyCallArgs[0]).to.have.property('__queryset__');
+        expect(channelAllStub.calledOnce).to.be.ok;
+        var channelAllStubCallArgs = channelAllStub.getCall(0).args;
+        expect(channelAllStubCallArgs[0]).to.be.an('object');
+        expect(channelAllStubCallArgs[0]).to.have.property('__queryset__');
 
-        var jsonQuery = Utils.JSON.parse(channelAllSpyCallArgs[0].__queryset__);
+        var jsonQuery = Utils.JSON.parse(channelAllStubCallArgs[0].__queryset__);
         expect(jsonQuery).to.have.property('fields');
         expect(jsonQuery.fields).to.be.an.instanceof(Array);
         expect(jsonQuery.fields).to.eql(['id', 'name']);
 
-        channelAllSpy.restore();
+        channelAllStub.restore();
     });
 });
