@@ -184,4 +184,73 @@ describe('ChannelResource#filter', function () {
 
         channelAllStub.restore();
     });
+
+    it('should return the same value for `Resource#exclude(<args>)` and for `Resource#filter().not(<args>)`', function () {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var flattened1 = channel.exclude({ name__contains: 'test' }).operator.flatten();
+        var flattened2 = channel.filter().not({ name__contains: 'test'}).operator.flatten();
+        expect(flattened1).to.deep.equal(flattened2);
+    });
+
+    it('should complain about wrong lookups', function () {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        expect(function () {
+            console.log(channel.filter({'contains': 'test'}));
+        }).to.throw('Invalid field name: contains');
+
+        expect(function () {
+            console.log(channel.filter({'contains__name': 'test'}));
+        }).to.throw('Field lookups can only be at the end if present');
+
+        expect(function () {
+            console.log(channel.filter({'name__contains__exact': 'test'}));
+        }).to.throw('Field lookups can only be at the end if present');
+    });
+
+    it('should complain about wrong filters', function () {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        expect(function () {
+            console.log(channel.filter(['name__contains', 'test', 'mary']));
+        }).to.throw('Filters must be in the form of');
+        expect(function () {
+            console.log(channel.filter(['name__contains']));
+        }).to.throw('Filters must be in the form of');
+        expect(function () {
+            console.log(channel.filter('name__contains__julianne'));
+        }).to.throw('Invalid filter: "name__contains__julianne"');
+    });
+
+    it('should accept multiples filters on the same object', function () {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var flattened = channel.filter(
+            { name__contains: 'test1', description__contains: 'test2' },
+            { age__gte: 19, age__lte: 50, published: true }
+        ).operator.flatten();
+        console.log(JSON.stringify(flattened));
+
+        var andOpCount = 0;
+        for (var i = 0; i < flattened.length; i++) {
+            if ((i % 2) > 0) {
+                andOpCount += 1;
+                expect(flattened[i]).to.equal('AND');
+            }
+        }
+        expect(andOpCount).to.equal(4);
+
+        expect(Utils.any(flattened, function (filter) {
+            return Utils.isObject(filter) && filter.name__contains == 'test1';
+        })).to.be.ok;
+        expect(Utils.any(flattened, function (filter) {
+            return Utils.isObject(filter) && filter.description__contains == 'test2';
+        })).to.be.ok;
+        expect(Utils.any(flattened, function (filter) {
+            return Utils.isObject(filter) && filter.age__gte == 19;
+        })).to.be.ok;
+        expect(Utils.any(flattened, function (filter) {
+            return Utils.isObject(filter) && filter.age__lte == 50;
+        })).to.be.ok;
+        expect(Utils.any(flattened, function (filter) {
+            return Utils.isObject(filter) && filter.published == true;
+        })).to.be.ok;
+    });
 });
