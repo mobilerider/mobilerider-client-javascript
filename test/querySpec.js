@@ -226,7 +226,6 @@ describe('ChannelResource#filter', function () {
             { name__contains: 'test1', description__contains: 'test2' },
             { age__gte: 19, age__lte: 50, published: true }
         ).operator.flatten();
-        console.log(JSON.stringify(flattened));
 
         var andOpCount = 0;
         for (var i = 0; i < flattened.length; i++) {
