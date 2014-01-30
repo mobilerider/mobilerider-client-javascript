@@ -233,7 +233,6 @@ describe('ChannelResource', function () {
                     done();
                 },
                 function () {
-                    console.log(arguments);
                     var s = [], i;
                     for (i = 0; i < arguments.length; i++) {
                         s.push(arguments[i].toString());

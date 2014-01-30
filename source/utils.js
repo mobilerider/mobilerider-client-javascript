@@ -88,10 +88,6 @@ var Utils = (function () {
         isObject: isObject,
         any: any,
         some: any,
-        map: map,
-        JSON: {
-            stringify: JSON3.stringify,
-            parse: JSON3.parse
-        }
+        map: map
     };
 })();

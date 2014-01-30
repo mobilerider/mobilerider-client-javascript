@@ -6,8 +6,7 @@ module.exports = function (grunt) {
         // Bundled libraries
         librariesFiles = [
             'node_modules/reqwest/src/reqwest.js',
-            'node_modules/d.js/lib/D.js',
-            'node_modules/json3/lib/json3.js',
+            'node_modules/d.js/lib/D.js'
         ],
         // Our modules
         sourceFiles = [

@@ -177,7 +177,7 @@ describe('ChannelResource#filter', function () {
         expect(channelAllStubCallArgs[0]).to.be.an('object');
         expect(channelAllStubCallArgs[0]).to.have.property('__queryset__');
 
-        var jsonQuery = Utils.JSON.parse(channelAllStubCallArgs[0].__queryset__);
+        var jsonQuery = JSON.parse(channelAllStubCallArgs[0].__queryset__);
         expect(jsonQuery).to.have.property('fields');
         expect(jsonQuery.fields).to.be.an.instanceof(Array);
         expect(jsonQuery.fields).to.eql(['id', 'name']);

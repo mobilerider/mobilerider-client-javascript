@@ -59,7 +59,7 @@ Resource.prototype.create = function (attributes) {
         delete finalAttributes.id;
         this.validateAttributes(finalAttributes);
     }
-    return this.client.request({ url: this.getUrl(), method: 'POST', data: Utils.JSON.stringify(finalAttributes) });
+    return this.client.request({ url: this.getUrl(), method: 'POST', data: JSON.stringify(finalAttributes) });
 };
 
 Resource.prototype.save = function (attributes) {
@@ -82,7 +82,7 @@ Resource.prototype.save = function (attributes) {
         id = finalAttributes.id;
         this.validateAttributes(finalAttributes);
     }
-    return this.client.request({ url: this.getUrl(id), method: 'PUT', data: Utils.JSON.stringify(attributes) });
+    return this.client.request({ url: this.getUrl(id), method: 'PUT', data: JSON.stringify(attributes) });
 };
 
 Resource.prototype.delete = function (id) {

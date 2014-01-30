@@ -30,11 +30,16 @@
     "karma-expect": "~1.0.0",
     "karma-chai-plugins": "~0.1.3",
     "karma-sinon": "~1.0.0",
-    "json3": "git+https://github.com/mobilerider/json3#ready-to-bundle",
     "d.js": "git+https://github.com/mobilerider/D.js#ready-to-bundle",
     "reqwest": "git+https://github.com/mobilerider/reqwest#ready-to-bundle",
     "grunt-contrib-concat": "~0.3.0",
     "grunt-contrib-uglify": "~0.3.2"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "scripts": {
+    "prepublish": "grunt"
+  },
+  "files": [
+    "./dist/"
+  ]
 }

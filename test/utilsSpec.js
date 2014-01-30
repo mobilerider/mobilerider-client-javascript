@@ -96,26 +96,3 @@ describe('#map', function () {
         expect(count).to.eql(5);
     });
 });
-
-describe('Imported utilities...', function () {
-
-    it('shoud have JSON stringify/parse functions', function () {
-        expect(Utils).to.have.property('JSON');
-        expect(Utils.JSON).to.have.property('stringify');
-        expect(Utils.JSON).to.have.property('parse');
-        expect(Utils.JSON.stringify).to.be.a('function');
-        expect(Utils.JSON.parse).to.be.a('function');
-
-        var dumped;
-        var dump = function () { dumped = Utils.JSON.stringify({ some_key: 'some-value' }); };
-        expect(dump).to.not.throw(Error);
-        expect(dumped).to.be.a('string');
-
-        var undumped;
-        var undump = function () { undumped = Utils.JSON.parse(dumped); };
-        expect(undump).to.not.throw(Error);
-        expect(undumped).to.be.an('object');
-        expect(undumped).to.have.property('some_key', 'some-value');
-        expect(Utils.keys(undumped)).to.eql(['some_key']);
-    });
-});

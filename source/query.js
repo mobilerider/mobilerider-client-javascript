@@ -111,7 +111,7 @@ Operator.prototype.addFilters = function (filters) {
                 newFilters.push(tupleToObj(objKey, objValue));
             });
         } else {
-            throw new TypeError('Invalid filter: ' + Utils.JSON.stringify(value));
+            throw new TypeError('Invalid filter: ' + JSON.stringify(value));
         }
     });
     this.filters = this.filters.concat(newFilters);
@@ -238,7 +238,7 @@ Query.prototype.fetch = function () {
         jsonQuery.fields = Utils.slice(this.fields);
     }
     return this.resource.all({
-        __queryset__: Utils.JSON.stringify(jsonQuery)
+        __queryset__: JSON.stringify(jsonQuery)
     });
 };
 
