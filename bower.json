@@ -1,0 +1,26 @@
+{
+  "name": "mobilerider-client",
+  "version": "1.0",
+  "homepage": "https://github.com/mobilerider/mobilerider-client-javascript",
+  "authors": [
+    "Julio Menendez <julio@mobilerider.com>",
+    "Armando Perez Marques <armando.perez@mobilerider.com>"
+  ],
+  "description": "MobileRider Networks API client for Javascript",
+  "main": "./dist/mobilerider-client.js",
+  "keywords": [
+    "MobileRider",
+    "client",
+    "API"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "coverage",
+    "test",
+    "tests",
+    "source"
+  ]
+}

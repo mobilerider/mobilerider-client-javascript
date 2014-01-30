@@ -1,5 +1,5 @@
 {
-  "name": "mobilerider-client-javascript",
+  "name": "mobilerider-client",
   "author": "Armando Perez Marques <armando.perez@mobilerider.com>",
   "description": "MobileRider Networks API client for Javascript",
   "repository": {
@@ -11,7 +11,7 @@
     "client",
     "API"
   ],
-  "main": "./source/main.js",
+  "main": "./dist/mobilerider-client.js",
   "devDependencies": {
     "grunt": "~0.4.2",
     "matchdep": "~0.3.0",
