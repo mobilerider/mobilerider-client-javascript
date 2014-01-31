@@ -154,10 +154,16 @@ var Query = function (resource, operator_or_filters, fields) {
     } else {
         this.operator = new Operator('AND', operator_or_filters);
     }
+
+    this._pageIndex = 1;
+    this._pageSize = 20;
 };
 
 Query.prototype.clone = function () {
-    return new Query(this.resource, this.operator.clone(), this.fields);
+    var cloned = new Query(this.resource, this.operator.clone(), this.fields);
+    cloned._pageSize = this._pageSize;
+    cloned._pageIndex = this._pageIndex;
+    return cloned;
 };
 
 Query.prototype.and = function () {
@@ -214,6 +220,30 @@ Query.prototype.only = function () {
     return cloned;
 };
 
+Query.prototype.setPage = function (_pageIndex, _pageSize) {
+    pageIndex = parseInt(_pageIndex, 10);
+    pageSize = parseInt(_pageSize, 10);
+    if (isNaN(pageIndex) || pageIndex < 1) {
+        throw new Error('Invalid page number: ' + _pageIndex);
+    }
+    var cloned = this.clone();
+    cloned._pageIndex = pageIndex;
+    if (!isNaN(pageSize)) {
+        cloned._pageSize = pageSize;
+    }
+    return cloned;
+};
+
+Query.prototype.setPageSize = function (_pageSize) {
+    pageSize = parseInt(_pageSize, 10);
+    if (isNaN(pageSize) || pageSize < 1) {
+        throw new Error('Invalid page size: ' + _pageSize);
+    }
+    var cloned = this.clone();
+    cloned._pageSize = pageSize;
+    return cloned;
+};
+
 Query.prototype.fetch = function () {
     var self = this,
         flattened = this.operator.flatten();
@@ -228,6 +258,8 @@ Query.prototype.fetch = function () {
                 });
             }
         });
+        params.push({ name: 'page', value: this._pageIndex });
+        params.push({ name: 'limit', value: this._pageSize });
         return self.resource.all(params);
     }
 
@@ -237,8 +269,11 @@ Query.prototype.fetch = function () {
     if (this.fields.length) {
         jsonQuery.fields = Utils.slice(this.fields);
     }
+
     return this.resource.all({
-        __queryset__: JSON.stringify(jsonQuery)
+        __queryset__: JSON.stringify(jsonQuery),
+        page: this._pageIndex,
+        limit: this._pageSize
     });
 };
 

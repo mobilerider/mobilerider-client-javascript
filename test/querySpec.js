@@ -249,7 +249,71 @@ describe('ChannelResource#filter', function () {
             return Utils.isObject(filter) && filter.age__lte == 50;
         })).to.be.ok;
         expect(Utils.any(flattened, function (filter) {
-            return Utils.isObject(filter) && filter.published == true;
+            return Utils.isObject(filter) && filter.published === true;
         })).to.be.ok;
+    });
+
+    it('should have the pagination attributes set', function () {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var query = channel.filter();
+        expect(query).to.have.property('_pageIndex', 1);
+        expect(query).to.have.property('_pageSize', 20);
+
+        var cloned = query.clone();
+        expect(cloned).to.have.property('_pageIndex', 1);
+        expect(cloned).to.have.property('_pageSize', 20);
+
+        cloned = channel.setPage(2, 10);
+        expect(cloned).to.have.property('_pageIndex', 2);
+        expect(cloned).to.have.property('_pageSize', 10);
+
+        cloned = cloned.setPage(3, 15);
+        expect(cloned).to.have.property('_pageIndex', 3);
+        expect(cloned).to.have.property('_pageSize', 15);
+
+        cloned = cloned.setPage(4);
+        expect(cloned).to.have.property('_pageIndex', 4);
+        expect(cloned).to.have.property('_pageSize', 15);
+
+        cloned = cloned.setPageSize(17);
+        expect(cloned).to.have.property('_pageIndex', 4);
+        expect(cloned).to.have.property('_pageSize', 17);
+    });
+
+    it('should complain about wrong pagination attributes', function () {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        expect(function () { channel.setPage('first page'); }).to.throw('Invalid page number');
+        expect(function () { channel.setPage(2, 'twenty'); }).to.not.throw();
+
+        var query = channel.setPage(2);
+        expect(query).to.have.property('_pageIndex', 2);
+        expect(query).to.have.property('_pageSize', 20);
+
+        query = query.setPageSize(15);
+        expect(query).to.have.property('_pageSize', 15);
+        expect(function () { channel.setPageSize('twenty'); }).to.throw('Invalid page size');
+    });
+
+    it('should send the pagination parameters to the server (no filters)', function () {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
+
+        channel.setPage(2, 15).fetch().then( function () { done(); } );
+
+        expect(channelAllStub.calledOnce).to.be.ok;
+        var channelAllStubCallArgs = channelAllStub.getCall(0).args;
+        expect(channelAllStubCallArgs[0]).to.be.an.instanceof(Array);
+        Utils.each(channelAllStubCallArgs[0], function (param) {
+            expect(param).to.be.an('object');
+            expect(param).not.to.be.an.instanceof(Array);
+        });
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+            return param.name == 'page' && param.value == 2;
+        })).to.be.ok;
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+            return param.name = 'limit' && param.value == 15;
+        })).to.be.ok;
+
+        channelAllStub.restore();
     });
 });

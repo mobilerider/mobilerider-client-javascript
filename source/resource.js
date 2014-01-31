@@ -104,6 +104,16 @@ Resource.prototype.exclude = function () {
     return query.not.apply(query, Utils.slice(arguments));
 };
 
+Resource.prototype.setPage = function () {
+    var query = this.filter();
+    return query.setPage.apply(query, Utils.slice(arguments));
+};
+
+Resource.prototype.setPageSize = function () {
+    var query = this.filter();
+    return query.setPageSize.apply(query, Utils.slice(arguments));
+};
+
 return Resource;
 
 })();
