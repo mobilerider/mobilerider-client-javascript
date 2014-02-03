@@ -1,4 +1,6 @@
 var Utils = (function () {
+    'use strict';
+
     var nativeForEach = Array.prototype.forEach,
         nativeIsArray = Array.isArray,
         nativeSome = Array.prototype.some,
@@ -19,7 +21,7 @@ var Utils = (function () {
             var keys = [];
             for (var key in obj) if (obj.hasOwnProperty(key)) keys.push(key);
             return keys;
-        };
+        },
         each = function(obj, iterator, context) {
             if (obj === null || typeof obj == 'undefined') return;
             var i, length;

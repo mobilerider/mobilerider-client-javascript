@@ -1028,6 +1028,8 @@ var Settings = (function () {
     };
 })();
 var Utils = (function () {
+    'use strict';
+
     var nativeForEach = Array.prototype.forEach,
         nativeIsArray = Array.isArray,
         nativeSome = Array.prototype.some,
@@ -1048,7 +1050,7 @@ var Utils = (function () {
             var keys = [];
             for (var key in obj) if (obj.hasOwnProperty(key)) keys.push(key);
             return keys;
-        };
+        },
         each = function(obj, iterator, context) {
             if (obj === null || typeof obj == 'undefined') return;
             var i, length;
@@ -1320,8 +1322,6 @@ Operator.prototype.addFilters = function (filters) {
             newFilters.push(tupleToObj(value));
         } else if (value instanceof Operator) {
             newFilters.push(value.clone());
-        } else if (value instanceof Query) {
-            newFilters.push(value.operator.clone());
         } else if (typeof key == 'string') {
             self.validateField(key);
             newFilters.push(tupleToObj(key, value));
@@ -1484,7 +1484,7 @@ Query.prototype.fetch = function () {
     }
 
     var jsonQuery = {
-        filters: flattened,
+        filters: flattened
     };
     if (this.fields.length) {
         jsonQuery.fields = Utils.slice(this.fields);
@@ -1595,6 +1595,8 @@ Resource.prototype.all = function (data) {
     // Return a promise that when resolved returns all the instances of the resource
     return this.client.request({ url: this.getUrl(), method: 'GET', data: data });
 };
+
+Resource.prototype.fetch = Resource.prototype.all;
 
 Resource.prototype.filter = function () {
     return new Query(this, arguments);
