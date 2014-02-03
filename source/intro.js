@@ -1,2 +1,2 @@
 (function (exports, undefined) {
-'use strict';
+    'use strict';

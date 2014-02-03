@@ -1,5 +1,7 @@
 var Settings = (function () {
+    'use strict';
+
     return {
-        endpointPrefix: 'https://api.devmobilerider.com/api'
+        endpointPrefix: 'http://api.devmobilerider.com/api'
     };
 })();
