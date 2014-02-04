@@ -795,6 +795,11 @@ var Promises = (function (undef) {
 				, isPending: function(){ return !!(status === 0); }
 
 				, getStatus: function(){ return status; }
+
+				// jQuery.Deferred compatible methods (more to come if needed)
+				, done: promise_success
+				, fail: promise_error
+				, always: promise_ensure
 			}
 		;
 		_promise.toSource = _promise.toString = _promise.valueOf = function(){return value === undef ? this : value; };
