@@ -117,6 +117,11 @@ var Resource = (function () {
         return query.setPageSize.apply(query, Utils.slice(arguments));
     };
 
+    Resource.prototype.orderBy = function () {
+        var query = this.filter();
+        return query.orderBy.apply(query, Utils.slice(arguments));
+    };
+
     return Resource;
 
 })();

@@ -294,7 +294,7 @@ describe('ChannelResource#filter', function () {
         expect(function () { channel.setPageSize('twenty'); }).to.throw('Invalid page size');
     });
 
-    it('should send the pagination parameters to the server (no filters)', function () {
+    it('should send the pagination parameters to the server (no filters)', function (done) {
         var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
         var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
 
@@ -312,6 +312,178 @@ describe('ChannelResource#filter', function () {
         })).to.be.ok;
         expect(Utils.any(channelAllStubCallArgs[0], function (param) {
             return param.name = 'limit' && param.value == 15;
+        })).to.be.ok;
+
+        channelAllStub.restore();
+    });
+
+    it('should send the pagination parameters to the server (with complex filters)', function (done) {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
+
+        channel.setPage(2, 15).filter(['title__contains', 'test']).or({title__contains: 'something'}).not({age: 19}).fetch().then( function() { done(); });
+
+        expect(channelAllStub.calledOnce).to.be.ok;
+        var channelAllStubCallArgs = channelAllStub.getCall(0).args;
+        expect(channelAllStubCallArgs[0]).to.be.an('object');
+
+        expect(Utils.any(channelAllStubCallArgs[0], function (value, key) {
+            return key == 'page' && value == 2;
+        })).to.be.ok;
+        expect(Utils.any(channelAllStubCallArgs[0], function (value, key) {
+            return key = 'limit' && value == 15;
+        })).to.be.ok;
+
+        channelAllStub.restore();
+    });
+
+    it('should not send ordering parameters to the server if no ordering is set (no filters)', function (done) {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
+
+        channel.setPage(2, 15).fetch().then( function () { done(); } );
+
+        expect(channelAllStub.calledOnce).to.be.ok;
+        var channelAllStubCallArgs = channelAllStub.getCall(0).args;
+        expect(channelAllStubCallArgs[0]).to.be.an.instanceof(Array);
+        Utils.each(channelAllStubCallArgs[0], function (param) {
+            expect(param).to.be.an('object');
+            expect(param).not.to.be.an.instanceof(Array);
+        });
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+            return param.name == 'sort';
+        })).to.not.be.ok;
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+            return param.name == 'order';
+        })).to.not.be.ok;
+
+        channelAllStub.restore();
+    });
+
+    it('should not send ordering parameters to the server if no ordering is set (with complex filters)', function (done) {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
+
+        channel.filter(['title__contains', 'test']).or({title__contains: 'something'}).not({age: 19}).fetch().then( function () { done(); } );
+
+        expect(channelAllStub.calledOnce).to.be.ok;
+        var channelAllStubCallArgs = channelAllStub.getCall(0).args;
+        expect(channelAllStubCallArgs[0]).to.be.an('object');
+
+        expect(Utils.any(channelAllStubCallArgs[0], function (value, key) {
+            return key == 'sort';
+        })).to.not.be.ok;
+        expect(Utils.any(channelAllStubCallArgs[0], function (value, key) {
+            return key == 'order';
+        })).to.not.be.ok;
+
+        channelAllStub.restore();
+    });
+
+    it('should send ordering parameters to the server if ordering is set (no filters)', function (done) {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
+
+        channel.setPage(2, 15).orderBy('date').fetch().then( function () { done(); } );
+
+        expect(channelAllStub.calledOnce).to.be.ok;
+        var channelAllStubCallArgs = channelAllStub.getCall(0).args;
+        expect(channelAllStubCallArgs[0]).to.be.an.instanceof(Array);
+        Utils.each(channelAllStubCallArgs[0], function (param) {
+            expect(param).to.be.an('object');
+            expect(param).not.to.be.an.instanceof(Array);
+        });
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+            return param.name == 'sort' && param.value == 'date';
+        })).to.be.ok;
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+            return param.name == 'order' && param.value == 'asc';
+        })).to.be.ok;
+
+        channelAllStub.restore();
+    });
+
+    it('should send ordering parameters to the server if ordering is set (no filters): Last `orderBy` call wins', function (done) {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
+
+        channel.orderBy('date').setPage(2, 15).orderBy('title').fetch().then( function () { done(); } );
+
+        expect(channelAllStub.calledOnce).to.be.ok;
+        var channelAllStubCallArgs = channelAllStub.getCall(0).args;
+        expect(channelAllStubCallArgs[0]).to.be.an.instanceof(Array);
+        Utils.each(channelAllStubCallArgs[0], function (param) {
+            expect(param).to.be.an('object');
+            expect(param).not.to.be.an.instanceof(Array);
+        });
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+            return param.name == 'sort' && param.value == 'title';
+        })).to.be.ok;
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+            return param.name == 'order' && param.value == 'asc';
+        })).to.be.ok;
+
+        channelAllStub.restore();
+    });
+
+    it('should send ordering parameters to the server if ordering is set (no filters): Last `orderBy` call wins (descending ordering)', function (done) {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
+
+        channel.orderBy('date').setPage(2, 15).orderBy('-title').fetch().then( function () { done(); } );
+
+        expect(channelAllStub.calledOnce).to.be.ok;
+        var channelAllStubCallArgs = channelAllStub.getCall(0).args;
+        expect(channelAllStubCallArgs[0]).to.be.an.instanceof(Array);
+        Utils.each(channelAllStubCallArgs[0], function (param) {
+            expect(param).to.be.an('object');
+            expect(param).not.to.be.an.instanceof(Array);
+        });
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+            return param.name == 'sort' && param.value == 'title';
+        })).to.be.ok;
+        expect(Utils.any(channelAllStubCallArgs[0], function (param) {
+            return param.name == 'order' && param.value == 'desc';
+        })).to.be.ok;
+
+        channelAllStub.restore();
+    });
+
+    it('should send ordering parameters to the server if ordering is set (with complex filters)', function (done) {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
+
+        channel.filter(['title__contains', 'test']).orderBy('date').or({title__contains: 'something'}).not({age: 19}).fetch().then( function () { done(); } );
+
+        expect(channelAllStub.calledOnce).to.be.ok;
+        var channelAllStubCallArgs = channelAllStub.getCall(0).args;
+        expect(channelAllStubCallArgs[0]).to.be.an('object');
+
+        expect(Utils.any(channelAllStubCallArgs[0], function (value, key) {
+            return key == 'sort' && value == 'date';
+        })).to.be.ok;
+        expect(Utils.any(channelAllStubCallArgs[0], function (value, key) {
+            return key == 'order' && value == 'asc';
+        })).to.be.ok;
+
+        channelAllStub.restore();
+    });
+
+    it('should send ordering parameters to the server if ordering is set (with complex filters): Last `orderBy` call wins (descending ordering)', function (done) {
+        var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
+        var channelAllStub = sinon.stub(channel, 'all', returnFakePromise);
+
+        channel.filter(['title__contains', 'test']).orderBy('date').or({title__contains: 'something'}).not({age: 19}).orderBy('-title').fetch().then( function () { done(); } );
+
+        expect(channelAllStub.calledOnce).to.be.ok;
+        var channelAllStubCallArgs = channelAllStub.getCall(0).args;
+        expect(channelAllStubCallArgs[0]).to.be.an('object');
+
+        expect(Utils.any(channelAllStubCallArgs[0], function (value, key) {
+            return key == 'sort' && value == 'title';
+        })).to.be.ok;
+        expect(Utils.any(channelAllStubCallArgs[0], function (value, key) {
+            return key == 'order' && value == 'desc';
         })).to.be.ok;
 
         channelAllStub.restore();

@@ -163,6 +163,7 @@ var Query = (function () {
         var cloned = new Query(this.resource, this.operator.clone(), this.fields);
         cloned._pageSize = this._pageSize;
         cloned._pageIndex = this._pageIndex;
+        cloned.ordering = this.ordering;
         return cloned;
     };
 
@@ -244,13 +245,25 @@ var Query = (function () {
         return cloned;
     };
 
+    Query.prototype.orderBy = function () {
+        var cloned = this.clone();
+        cloned.ordering = Utils.map(arguments, function (field) {
+            return {
+                field: field[0] === '-' ? field.slice(1) : field,
+                order: field[0] === '-' ? 'desc' : 'asc'
+            };
+        });
+        return cloned;
+    };
+
     Query.prototype.fetch = function () {
         var self = this,
-            flattened = this.operator.flatten();
+            flattened = this.operator.flatten(),
+            params;
         if (!Utils.any(flattened, function (component) {
             return (component != 'AND' && (Utils.isArray(component) || !Utils.isObject(component) || !!component.NOT ));
         })) {
-            var params = [];
+            params = [];
             Utils.each(flattened, function (component) {
                 if (Utils.isObject(component)) {
                     Utils.each(component, function (v, k) {
@@ -260,21 +273,34 @@ var Query = (function () {
             });
             params.push({ name: 'page', value: this._pageIndex });
             params.push({ name: 'limit', value: this._pageSize });
+
+            // Right now the API can order using one file only
+            if (this.ordering && this.ordering.length) {
+                params.push({ name: 'sort', value: this.ordering[0].field });
+                params.push({ name: 'order', value: this.ordering[0].order });
+            }
+
             return self.resource.all(params);
         }
 
-        var jsonQuery = {
-            filters: flattened
-        };
+        var jsonQuery = { filters: flattened };
         if (this.fields.length) {
             jsonQuery.fields = Utils.slice(this.fields);
         }
 
-        return this.resource.all({
+        params = {
             __queryset__: JSON.stringify(jsonQuery),
             page: this._pageIndex,
             limit: this._pageSize
-        });
+        };
+
+        // Right now the API can order using one file only
+        if (this.ordering && this.ordering.length) {
+            params.sort = this.ordering[0].field;
+            params.order = this.ordering[0].order;
+        }
+
+        return this.resource.all(params);
     };
 
     return Query;
