@@ -1218,7 +1218,17 @@ var Utils = (function () {
                 }
             },
             function (xhr) {
-                deferred.reject('(' + xhr.status + ') ' + xhr.statusText + ': ' + xhr.responseText);
+                var errorResponse;
+                try {
+                    errorResponse = JSON.parse(xhr.responseText);
+                } catch (exception) {
+                    errorResponse = {};
+                }
+                errorResponse.meta = errorResponse.meta || {};
+                errorResponse.meta.statusCode = xhr.status;
+                errorResponse.meta.statusText = xhr.statusText;
+                errorResponse.meta.responseText = xhr.responseText;
+                deferred.reject(errorResponse);
             }
         );
         return deferred.promise;
