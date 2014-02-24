@@ -14,7 +14,70 @@ var Client = (function () {
         };
     };
 
+    Client.prototype.resolvePromise = function (promise, response, rootKeys) {
+        var copyKeys = (rootKeys && rootKeys.length) ? Utils.map(rootKeys) : ['success', 'object', 'objects'],
+            result;
+        if (typeof response !== 'object') {
+            promise.reject({
+                success: false,
+                meta: {
+                    status: 'Invalid response from the server',
+                    response: response + ''
+                }
+            });
+        } else if (!response.success) {
+            result = { meta: {} };
+            Utils.each(response, function (value, key) {
+                if (key != 'meta') {
+                    if (copyKeys.indexOf(key) != -1) {
+                        result[key] = value;
+                    } else {
+                        result.meta[key] = value;
+                    }
+                } else {
+                    Utils.each(response.meta, function (value, key) {
+                        result.meta[key] = value;
+                    });
+                }
+            });
+            promise.reject(result);
+        } else {
+            result = { meta: {} };
+            Utils.each(response, function (value, key) {
+                if (key != 'meta') {
+                    if (copyKeys.indexOf(key) != -1) {
+                        result[key] = value;
+                    } else {
+                        result.meta[key] = value;
+                    }
+                } else {
+                    Utils.each(response.meta, function (value, key) {
+                        result.meta[key] = value;
+                    });
+                }
+            });
+            promise.resolve(result);
+        }
+        return promise;
+    };
+
+    Client.prototype.rejectPromiseFromXhr = function (promise, xhr) {
+        var errorResponse;
+        try {
+            errorResponse = JSON.parse(xhr.responseText);
+        } catch (exception) {
+            errorResponse = {};
+        }
+        errorResponse.meta = errorResponse.meta || {};
+        errorResponse.meta.statusCode = xhr.status;
+        errorResponse.meta.statusText = xhr.statusText;
+        errorResponse.meta.responseText = xhr.responseText;
+        promise.reject(errorResponse);
+        return promise;
+    };
+
     Client.prototype.request = function (params) {
+        var self = this;
         params = params || {};
         var i, requiredParams = ['url', 'method'];
         for (i = requiredParams.length - 1; i >= 0; i--) {
@@ -44,61 +107,10 @@ var Client = (function () {
 
         Requests(params).then(
             function (response) {
-                var copyKeys, result;
-                if (typeof response !== 'object') {
-                    deferred.reject({
-                        success: false,
-                        status: 'Invalid response from the server',
-                        response: response + ''
-                    });
-                } else if (!response.success) {
-                    copyKeys = ['success', 'objects'];
-                    result = { meta: {} };
-                    Utils.each(response, function (value, key) {
-                        if (key != 'meta') {
-                            if (copyKeys.indexOf(key) != -1) {
-                                result[key] = value;
-                            } else {
-                                result.meta[key] = value;
-                            }
-                        } else {
-                            Utils.each(response.meta, function (value, key) {
-                                result.meta[key] = value;
-                            });
-                        }
-                    });
-                    deferred.reject(result);
-                } else {
-                    copyKeys = ['success', 'object', 'objects'];
-                    result = { meta: {} };
-                    Utils.each(response, function (value, key) {
-                        if (key != 'meta') {
-                            if (copyKeys.indexOf(key) != -1) {
-                                result[key] = value;
-                            } else {
-                                result.meta[key] = value;
-                            }
-                        } else {
-                            Utils.each(response.meta, function (value, key) {
-                                result.meta[key] = value;
-                            });
-                        }
-                    });
-                    deferred.resolve(result);
-                }
+                self.resolvePromise(deferred, response);
             },
             function (xhr) {
-                var errorResponse;
-                try {
-                    errorResponse = JSON.parse(xhr.responseText);
-                } catch (exception) {
-                    errorResponse = {};
-                }
-                errorResponse.meta = errorResponse.meta || {};
-                errorResponse.meta.statusCode = xhr.status;
-                errorResponse.meta.statusText = xhr.statusText;
-                errorResponse.meta.responseText = xhr.responseText;
-                deferred.reject(errorResponse);
+                self.rejectPromiseFromXhr(deferred, xhr);
             }
         );
         return deferred.promise;

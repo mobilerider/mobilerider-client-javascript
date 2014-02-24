@@ -22,7 +22,7 @@ var Utils = (function () {
             for (var key in obj) if (obj.hasOwnProperty(key)) keys.push(key);
             return keys;
         },
-        each = function(obj, iterator, context) {
+        each = function (obj, iterator, context) {
             if (obj === null || typeof obj == 'undefined') return;
             var i, length;
             if (nativeForEach && obj.forEach === nativeForEach) {
@@ -39,7 +39,7 @@ var Utils = (function () {
             }
         },
         extend = function (obj) {
-            each(slice(arguments, 1), function(source) {
+            each(slice(arguments, 1), function (source) {
                 if (source) {
                     for (var prop in source) {
                         if (source.hasOwnProperty(prop)) {
@@ -50,32 +50,33 @@ var Utils = (function () {
             });
             return obj;
         },
-        identity = function(value) { return value; },
-        any = function(obj, iterator, context) {
+        identity = function (value) { return value; },
+        any = function (obj, iterator, context) {
             iterator = iterator || identity;
             var result = false;
-            if (obj === null) {
+            if (obj === null || obj === void 0 || obj === false) {
                 return result;
             }
             if (nativeSome && obj.some === nativeSome) {
                 return obj.some(iterator, context);
             }
-            each(obj, function(value, index, list) {
+            each(obj, function (value, index, list) {
                 if (result || (result = iterator.call(context, value, index, list))) {
                     return breaker;
                 }
             });
             return !!result;
         },
-        map = function(obj, iterator, context) {
+        map = function (obj, iterator, context) {
+            iterator = iterator || identity;
             var results = [];
-            if (obj === null) {
+            if (obj === null || obj === void 0 || obj === false) {
                 return results;
             }
             if (nativeMap && obj.map === nativeMap) {
                 return obj.map(iterator, context);
             }
-            each(obj, function(value, index, list) {
+            each(obj, function (value, index, list) {
                 results.push(iterator.call(context, value, index, list));
             });
             return results;

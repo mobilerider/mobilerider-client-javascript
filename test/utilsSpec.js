@@ -76,13 +76,37 @@ describe('#isArray', function () {
 });
 
 describe('#any', function () {
-    it('shoud find the first and only the first ocurrence of a value that passes the test', function () {
+
+    it('should find the first and only the first occurrence of a value that passes the test', function () {
         var count = 0, found = Utils.any([1, 2, 3, 4, 5], function (value) {
             count += 1;
             return value > 3;
         });
         expect(found).to.be.ok;
         expect(count).to.eql(4);
+    });
+
+    it('should return `false` for `null`, `undefined` and `false` values', function () {
+        var called = false;
+        expect(Utils.any(null, function (value) {
+            called = true;
+            return true;
+        })).to.not.be.ok;
+        expect(called).to.not.be.ok;
+
+        called = false;
+        expect(Utils.any(void 0, function (value) {
+            called = true;
+            return true;
+        })).to.not.be.ok;
+        expect(called).to.not.be.ok;
+
+        called = false;
+        expect(Utils.any(false, function (value) {
+            called = true;
+            return true;
+        })).to.not.be.ok;
+        expect(called).to.not.be.ok;
     });
 });
 
@@ -94,5 +118,29 @@ describe('#map', function () {
         });
         expect(doubled).to.eql([2, 4, 6, 8, 10]);
         expect(count).to.eql(5);
+    });
+
+    it('should return the same array when omitting the iterator', function () {
+        expect(Utils.map([1, 3, 5, 7, 11, 13])).to.eql([1, 3, 5, 7, 11, 13]);
+        expect(Utils.map(['1', '3', '5', '7', '11', '13'])).to.eql(['1', '3', '5', '7', '11', '13']);
+    });
+
+    it('should return an empty array for `null`, `undefined` and `false` values', function () {
+        var mapped;
+
+        mapped = Utils.map(false);
+        expect(mapped).to.eql([]);
+        expect(mapped).to.be.an('Array');
+        expect(mapped).to.have.length(0);
+
+        mapped = Utils.map(void 0);
+        expect(mapped).to.eql([]);
+        expect(mapped).to.be.an('Array');
+        expect(mapped).to.have.length(0);
+
+        mapped = Utils.map(null);
+        expect(mapped).to.eql([]);
+        expect(mapped).to.be.an('Array');
+        expect(mapped).to.have.length(0);
     });
 });
