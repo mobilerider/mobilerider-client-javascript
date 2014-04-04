@@ -256,10 +256,13 @@ var Query = (function () {
         return cloned;
     };
 
-    Query.prototype.fetch = function () {
+    Query.prototype.fetch = function (data) {
         var self = this,
             flattened = this.operator.flatten(),
             params;
+
+        data = data ? Utils.extend({}, data) : {};
+
         if (!Utils.any(flattened, function (component) {
             return (component != 'AND' && (Utils.isArray(component) || !Utils.isObject(component) || !!component.NOT ));
         })) {
@@ -280,6 +283,10 @@ var Query = (function () {
                 params.push({ name: 'order', value: this.ordering[0].order });
             }
 
+            Utils.each(data, function (v, k) {
+                params.push({ name: k, value: v });
+            });
+
             return self.resource.all(params);
         }
 
@@ -288,11 +295,11 @@ var Query = (function () {
             jsonQuery.fields = Utils.slice(this.fields);
         }
 
-        params = {
+        params = Utils.extend(data, {
             __queryset__: JSON.stringify(jsonQuery),
             page: this._pageIndex,
             limit: this._pageSize
-        };
+        });
 
         // Right now the API can order using one file only
         if (this.ordering && this.ordering.length) {
