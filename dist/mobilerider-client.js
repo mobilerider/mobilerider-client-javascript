@@ -67,8 +67,7 @@ var Requests = (function (undefined) {
       if (r._aborted) return error(r.request)
       if (r.request && r.request[readyState] == 4) {
         r.request.onreadystatechange = noop
-        if (twoHundo.test(r.request.status))
-          success(r.request)
+        if (twoHundo.test(r.request.status)) success(r.request)
         else
           error(r.request)
       }
@@ -133,9 +132,6 @@ var Requests = (function (undefined) {
       // need this for IE due to out-of-order onreadystatechange(), binding script
       // execution to an event listener gives us control over when the script
       // is executed. See http://jaubourg.net/2010/07/loading-script-as-onclick-handler-of.html
-      //
-      // if this hack is used in IE10 jsonp callback are never called
-      script.event = 'onclick'
       script.htmlFor = script.id = '_reqwest_' + reqId
     }
 
@@ -222,9 +218,12 @@ var Requests = (function (undefined) {
     init.apply(this, arguments)
   }
 
-  function setType(url) {
-    var m = url.match(/\.(json|jsonp|html|xml)(\?|$)/)
-    return m ? m[1] : 'js'
+  function setType(header) {
+    // json, javascript, text/plain, text/html, xml
+    if (header.match('json')) return 'json'
+    if (header.match('javascript')) return 'js'
+    if (header.match('text')) return 'html'
+    if (header.match('xml')) return 'xml'
   }
 
   function init(o, fn) {
@@ -246,7 +245,6 @@ var Requests = (function (undefined) {
     this._responseArgs = {}
 
     var self = this
-      , type = o['type'] || setType(this.url)
 
     fn = fn || function () {}
 
@@ -283,6 +281,7 @@ var Requests = (function (undefined) {
     }
 
     function success (resp) {
+      var type = o['type'] || setType(resp.getResponseHeader('Content-Type'))
       resp = (type !== 'jsonp') ? self.request : resp
       // use global data filter on response text
       var filteredResponse = globalSetupOptions.dataFilter(resp.responseText, type)
@@ -588,7 +587,8 @@ var Requests = (function (undefined) {
   }
 
   return reqwest
-})();/**
+})();
+/**
 * attempt of a simple defer/promise library for mobile development
 * @author Jonathan Gotti < jgotti at jgotti dot net>
 * @since 2012-10
@@ -1058,7 +1058,7 @@ var Utils = (function () {
             for (var key in obj) if (obj.hasOwnProperty(key)) keys.push(key);
             return keys;
         },
-        each = function(obj, iterator, context) {
+        each = function (obj, iterator, context) {
             if (obj === null || typeof obj == 'undefined') return;
             var i, length;
             if (nativeForEach && obj.forEach === nativeForEach) {
@@ -1075,7 +1075,7 @@ var Utils = (function () {
             }
         },
         extend = function (obj) {
-            each(slice(arguments, 1), function(source) {
+            each(slice(arguments, 1), function (source) {
                 if (source) {
                     for (var prop in source) {
                         if (source.hasOwnProperty(prop)) {
@@ -1086,32 +1086,33 @@ var Utils = (function () {
             });
             return obj;
         },
-        identity = function(value) { return value; },
-        any = function(obj, iterator, context) {
+        identity = function (value) { return value; },
+        any = function (obj, iterator, context) {
             iterator = iterator || identity;
             var result = false;
-            if (obj === null) {
+            if (obj === null || obj === void 0 || obj === false) {
                 return result;
             }
             if (nativeSome && obj.some === nativeSome) {
                 return obj.some(iterator, context);
             }
-            each(obj, function(value, index, list) {
+            each(obj, function (value, index, list) {
                 if (result || (result = iterator.call(context, value, index, list))) {
                     return breaker;
                 }
             });
             return !!result;
         },
-        map = function(obj, iterator, context) {
+        map = function (obj, iterator, context) {
+            iterator = iterator || identity;
             var results = [];
-            if (obj === null) {
+            if (obj === null || obj === void 0 || obj === false) {
                 return results;
             }
             if (nativeMap && obj.map === nativeMap) {
                 return obj.map(iterator, context);
             }
-            each(obj, function(value, index, list) {
+            each(obj, function (value, index, list) {
                 results.push(iterator.call(context, value, index, list));
             });
             return results;
@@ -1144,7 +1145,70 @@ var Utils = (function () {
         };
     };
 
+    Client.prototype.resolvePromise = function (promise, response, rootKeys) {
+        var copyKeys = (rootKeys && rootKeys.length) ? Utils.map(rootKeys) : ['success', 'object', 'objects'],
+            result;
+        if (typeof response !== 'object') {
+            promise.reject({
+                success: false,
+                meta: {
+                    status: 'Invalid response from the server',
+                    response: response + ''
+                }
+            });
+        } else if (!response.success) {
+            result = { meta: {} };
+            Utils.each(response, function (value, key) {
+                if (key != 'meta') {
+                    if (copyKeys.indexOf(key) != -1) {
+                        result[key] = value;
+                    } else {
+                        result.meta[key] = value;
+                    }
+                } else {
+                    Utils.each(response.meta, function (value, key) {
+                        result.meta[key] = value;
+                    });
+                }
+            });
+            promise.reject(result);
+        } else {
+            result = { meta: {} };
+            Utils.each(response, function (value, key) {
+                if (key != 'meta') {
+                    if (copyKeys.indexOf(key) != -1) {
+                        result[key] = value;
+                    } else {
+                        result.meta[key] = value;
+                    }
+                } else {
+                    Utils.each(response.meta, function (value, key) {
+                        result.meta[key] = value;
+                    });
+                }
+            });
+            promise.resolve(result);
+        }
+        return promise;
+    };
+
+    Client.prototype.rejectPromiseFromXhr = function (promise, xhr) {
+        var errorResponse;
+        try {
+            errorResponse = JSON.parse(xhr.responseText);
+        } catch (exception) {
+            errorResponse = {};
+        }
+        errorResponse.meta = errorResponse.meta || {};
+        errorResponse.meta.statusCode = xhr.status;
+        errorResponse.meta.statusText = xhr.statusText;
+        errorResponse.meta.responseText = xhr.responseText;
+        promise.reject(errorResponse);
+        return promise;
+    };
+
     Client.prototype.request = function (params) {
+        var self = this;
         params = params || {};
         var i, requiredParams = ['url', 'method'];
         for (i = requiredParams.length - 1; i >= 0; i--) {
@@ -1174,61 +1238,10 @@ var Utils = (function () {
 
         Requests(params).then(
             function (response) {
-                var copyKeys, result;
-                if (typeof response !== 'object') {
-                    deferred.reject({
-                        success: false,
-                        status: 'Invalid response from the server',
-                        response: response + ''
-                    });
-                } else if (!response.success) {
-                    copyKeys = ['success', 'objects'];
-                    result = { meta: {} };
-                    Utils.each(response, function (value, key) {
-                        if (key != 'meta') {
-                            if (copyKeys.indexOf(key) != -1) {
-                                result[key] = value;
-                            } else {
-                                result.meta[key] = value;
-                            }
-                        } else {
-                            Utils.each(response.meta, function (value, key) {
-                                result.meta[key] = value;
-                            });
-                        }
-                    });
-                    deferred.reject(result);
-                } else {
-                    copyKeys = ['success', 'object', 'objects'];
-                    result = { meta: {} };
-                    Utils.each(response, function (value, key) {
-                        if (key != 'meta') {
-                            if (copyKeys.indexOf(key) != -1) {
-                                result[key] = value;
-                            } else {
-                                result.meta[key] = value;
-                            }
-                        } else {
-                            Utils.each(response.meta, function (value, key) {
-                                result.meta[key] = value;
-                            });
-                        }
-                    });
-                    deferred.resolve(result);
-                }
+                self.resolvePromise(deferred, response);
             },
             function (xhr) {
-                var errorResponse;
-                try {
-                    errorResponse = JSON.parse(xhr.responseText);
-                } catch (exception) {
-                    errorResponse = {};
-                }
-                errorResponse.meta = errorResponse.meta || {};
-                errorResponse.meta.statusCode = xhr.status;
-                errorResponse.meta.statusText = xhr.statusText;
-                errorResponse.meta.responseText = xhr.responseText;
-                deferred.reject(errorResponse);
+                self.rejectPromiseFromXhr(deferred, xhr);
             }
         );
         return deferred.promise;
@@ -1494,10 +1507,13 @@ var Utils = (function () {
         return cloned;
     };
 
-    Query.prototype.fetch = function () {
+    Query.prototype.fetch = function (data) {
         var self = this,
             flattened = this.operator.flatten(),
             params;
+
+        data = data ? Utils.extend({}, data) : {};
+
         if (!Utils.any(flattened, function (component) {
             return (component != 'AND' && (Utils.isArray(component) || !Utils.isObject(component) || !!component.NOT ));
         })) {
@@ -1518,6 +1534,10 @@ var Utils = (function () {
                 params.push({ name: 'order', value: this.ordering[0].order });
             }
 
+            Utils.each(data, function (v, k) {
+                params.push({ name: k, value: v });
+            });
+
             return self.resource.all(params);
         }
 
@@ -1526,11 +1546,11 @@ var Utils = (function () {
             jsonQuery.fields = Utils.slice(this.fields);
         }
 
-        params = {
+        params = Utils.extend(data, {
             __queryset__: JSON.stringify(jsonQuery),
             page: this._pageIndex,
             limit: this._pageSize
-        };
+        });
 
         // Right now the API can order using one file only
         if (this.ordering && this.ordering.length) {
