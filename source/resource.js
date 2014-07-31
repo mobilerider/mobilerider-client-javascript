@@ -9,7 +9,11 @@ var Resource = (function () {
             if (!options.appId || !options.appSecret) {
                 throw new Error('You must pass a `Client` instance or `appId` and `appSecret`.');
             }
-            this.client = new Client({appId: options.appId, appSecret: options.appSecret});
+            this.client = new Client({
+                appId: options.appId,
+                appSecret: options.appSecret,
+                subVendorAppId: options.subVendorAppId
+            });
         } else if (!(this.client instanceof Client)) {
             throw new TypeError('You must pass a valid client instance, got an ' + (typeof this.client));
         }
