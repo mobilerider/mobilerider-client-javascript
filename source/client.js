@@ -9,9 +9,15 @@ var Client = (function () {
     };
 
     Client.prototype._getRequestHeaders = function () {
-        return {
-            'Authorization': 'Basic ' + btoa(unescape(encodeURIComponent(this.options.appId + ':' + this.options.appSecret)))
+        var headers =  {
+            Authorization: 'Basic ' + btoa(unescape(encodeURIComponent(this.options.appId + ':' + this.options.appSecret)))
         };
+
+        if ('subVendorAppId' in this.options && this.options.subVendorAppId) {
+            headers['X-Vendor-App-Id'] = this.options.subVendorAppId;
+        }
+
+        return headers;
     };
 
     Client.prototype.resolvePromise = function (promise, response, rootKeys) {
