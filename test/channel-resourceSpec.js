@@ -26,9 +26,11 @@ describe('ChannelResource', function () {
         if (url[url.length - 1] != '/') {
             url += '/';
         }
-        var id = 4;
-        url += id;
-        expect(channel.getUrl(id)).to.eql(url);
+
+        expect(url).to.match(/\/channel\/$/);
+        url += '4';
+        expect(channel.getUrl(4)).to.eql(url);
+        expect(url).to.match(/\/channel\/4$/);
     });
 
     describe('CRUD tests', function () {

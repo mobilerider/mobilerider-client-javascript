@@ -56,11 +56,6 @@ describe('Client class', function () {
         });
 
         it('should set the correct headers', function () {
-            var promiseMethods = [
-                'then', 'isPending', 'getStatus', 'success', 'error',
-                'otherwise', 'apply', 'spread', 'ensure', 'nodify',
-                'rethrow', 'rethrow'];
-
             var appId = 'someId', appSecret = 'someSecret';
 
             var client = new Client({
@@ -77,6 +72,49 @@ describe('Client class', function () {
             expect(xhr).to.have.property('requestHeaders');
             var headers = xhr.requestHeaders;
             expect(headers).to.have.property('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(appId + ':' + appSecret))));
+            expect(headers).to.not.have.property('X-Vendor-App-Id');
+        });
+
+        it('should set the correct headers - no `X-Vendor-App-Id` header if passed an empty string', function () {
+            var appId = 'someId', appSecret = 'someSecret';
+
+            var client = new Client({
+                appId: appId,
+                appSecret: appSecret,
+                subVendorAppId: ''
+            });
+
+            var promise = client.request({
+                url: 'http://api.devmobilerider.com/api/media',
+                method: 'GET',
+            });
+
+            var xhr = fakeServer.queue[0];
+            expect(xhr).to.have.property('requestHeaders');
+            var headers = xhr.requestHeaders;
+            expect(headers).to.have.property('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(appId + ':' + appSecret))));
+            expect(headers).to.not.have.property('X-Vendor-App-Id');
+        });
+
+        it('should set the correct headers - has `X-Vendor-App-Id` header', function () {
+            var appId = 'someId', appSecret = 'someSecret', vendorAppId = 'someOtherVendorId';
+
+            var client = new Client({
+                appId: appId,
+                appSecret: appSecret,
+                subVendorAppId: vendorAppId
+            });
+
+            var promise = client.request({
+                url: 'http://api.devmobilerider.com/api/media',
+                method: 'GET',
+            });
+
+            var xhr = fakeServer.queue[0];
+            expect(xhr).to.have.property('requestHeaders');
+            var headers = xhr.requestHeaders;
+            expect(headers).to.have.property('Authorization', 'Basic ' + btoa(unescape(encodeURIComponent(appId + ':' + appSecret))));
+            expect(headers).to.have.property('X-Vendor-App-Id', vendorAppId);
         });
 
         it('should fail for an invalid domain', function () {

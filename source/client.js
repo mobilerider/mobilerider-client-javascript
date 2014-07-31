@@ -9,11 +9,11 @@ var Client = (function () {
     };
 
     Client.prototype._getRequestHeaders = function () {
-        var headers =  {
+        var headers = {
             Authorization: 'Basic ' + btoa(unescape(encodeURIComponent(this.options.appId + ':' + this.options.appSecret)))
         };
 
-        if ('subVendorAppId' in this.options && this.options.subVendorAppId) {
+        if (this.options.subVendorAppId) {
             headers['X-Vendor-App-Id'] = this.options.subVendorAppId;
         }
 
