@@ -1140,9 +1140,15 @@ var Utils = (function () {
     };
 
     Client.prototype._getRequestHeaders = function () {
-        return {
-            'Authorization': 'Basic ' + btoa(unescape(encodeURIComponent(this.options.appId + ':' + this.options.appSecret)))
+        var headers = {
+            Authorization: 'Basic ' + btoa(unescape(encodeURIComponent(this.options.appId + ':' + this.options.appSecret)))
         };
+
+        if (this.options.subVendorAppId) {
+            headers['X-Vendor-App-Id'] = this.options.subVendorAppId;
+        }
+
+        return headers;
     };
 
     Client.prototype.resolvePromise = function (promise, response, rootKeys) {
@@ -1574,7 +1580,11 @@ var Utils = (function () {
             if (!options.appId || !options.appSecret) {
                 throw new Error('You must pass a `Client` instance or `appId` and `appSecret`.');
             }
-            this.client = new Client({appId: options.appId, appSecret: options.appSecret});
+            this.client = new Client({
+                appId: options.appId,
+                appSecret: options.appSecret,
+                subVendorAppId: options.subVendorAppId
+            });
         } else if (!(this.client instanceof Client)) {
             throw new TypeError('You must pass a valid client instance, got an ' + (typeof this.client));
         }
