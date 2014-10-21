@@ -47,7 +47,7 @@ describe('ChannelResource', function () {
         it('should retrieve a single object', function (done) {
             fakeServer.respondWith(
                 'GET',
-                'https://api.devmobilerider.com/api/channel/1',
+                'https://api.mobilerider.com/api/channel/1',
                 [
                     200,
                     'application/json',
@@ -84,7 +84,7 @@ describe('ChannelResource', function () {
 
             fakeServer.respondWith(
                 'GET',
-                'https://api.devmobilerider.com/api/channel',
+                'https://api.mobilerider.com/api/channel',
                 [
                     200,
                     'application/json',
@@ -146,7 +146,7 @@ describe('ChannelResource', function () {
 
             fakeServer.respondWith(
                 'POST',
-                'https://api.devmobilerider.com/api/channel',
+                'https://api.mobilerider.com/api/channel',
                 [
                     200,
                     'application/json',
@@ -187,7 +187,7 @@ describe('ChannelResource', function () {
 
             fakeServer.respondWith(
                 'POST',
-                'https://api.devmobilerider.com/api/channel',
+                'https://api.mobilerider.com/api/channel',
                 [
                     200,
                     'application/json',
@@ -234,7 +234,7 @@ describe('ChannelResource', function () {
 
             fakeServer.respondWith(
                 'PUT',
-                'https://api.devmobilerider.com/api/channel/1',
+                'https://api.mobilerider.com/api/channel/1',
                 [
                     200,
                     'application/json',
@@ -270,7 +270,7 @@ describe('ChannelResource', function () {
 
             fakeServer.respondWith(
                 'PUT',
-                'https://api.devmobilerider.com/api/channel',
+                'https://api.mobilerider.com/api/channel',
                 [
                     200,
                     'application/json',
@@ -309,7 +309,7 @@ describe('ChannelResource', function () {
 
             fakeServer.respondWith(
                 'DELETE',
-                'https://api.devmobilerider.com/api/channel/1',
+                'https://api.mobilerider.com/api/channel/1',
                 [
                     200,
                     'application/json',

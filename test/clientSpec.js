@@ -28,7 +28,7 @@ describe('Client class', function () {
 
             var clientRequest = function () { return client.request(); };
             expect(clientRequest).to.throw(/^Missing/);
-            clientRequest = function () { return client.request({ url: 'https://api.devmobilerider.com/api/media' }); };
+            clientRequest = function () { return client.request({ url: 'https://api.mobilerider.com/api/media' }); };
             expect(clientRequest).to.throw(/^Missing/);
             clientRequest = function () { return client.request({ method: 'GET' }); };
             expect(clientRequest).to.throw(/^Missing/);
@@ -46,7 +46,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.devmobilerider.com/api/media',
+                url: 'https://api.mobilerider.com/api/media',
                 method: 'GET',
             });
 
@@ -64,7 +64,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.devmobilerider.com/api/media',
+                url: 'https://api.mobilerider.com/api/media',
                 method: 'GET',
             });
 
@@ -85,7 +85,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'http://api.devmobilerider.com/api/media',
+                url: 'https://api.mobilerider.com/api/media',
                 method: 'GET',
             });
 
@@ -106,7 +106,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'http://api.devmobilerider.com/api/media',
+                url: 'https://api.mobilerider.com/api/media',
                 method: 'GET',
             });
 
@@ -133,7 +133,7 @@ describe('Client class', function () {
 
             clientRequest = function () {
                 client.request({
-                    url: 'https://api.devmobilerider.com/api/media',
+                    url: 'https://api.mobilerider.com/api/media',
                     method: 'FORCE',
                 });
             };
@@ -143,7 +143,7 @@ describe('Client class', function () {
         it('should fail for a JSON response with `success == false` and empty status', function (done) {
             fakeServer.respondWith(
                 'GET',
-                'https://api.devmobilerider.com/api/media',
+                'https://api.mobilerider.com/api/media',
                 [
                     200,
                     'application/json',
@@ -157,7 +157,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.devmobilerider.com/api/media',
+                url: 'https://api.mobilerider.com/api/media',
                 method: 'GET',
             });
 
@@ -182,7 +182,7 @@ describe('Client class', function () {
         it('should fail for a JSON response with `success == false` and a status message', function (done) {
             fakeServer.respondWith(
                 'GET',
-                'https://api.devmobilerider.com/api/media',
+                'https://api.mobilerider.com/api/media',
                 [
                     200,
                     'application/json',
@@ -196,7 +196,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.devmobilerider.com/api/media',
+                url: 'https://api.mobilerider.com/api/media',
                 method: 'GET',
             });
 
@@ -220,7 +220,7 @@ describe('Client class', function () {
         it('should succeed for a JSON response with `success == true`', function (done) {
             fakeServer.respondWith(
                 'GET',
-                'https://api.devmobilerider.com/api/media',
+                'https://api.mobilerider.com/api/media',
                 [
                     200,
                     'application/json',
@@ -234,7 +234,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.devmobilerider.com/api/media',
+                url: 'https://api.mobilerider.com/api/media',
                 method: 'GET',
             });
 
@@ -260,7 +260,7 @@ describe('Client class', function () {
         it('should succeed for a JSON response with `success == true`', function (done) {
             fakeServer.respondWith(
                 'GET',
-                'https://api.devmobilerider.com/api/media',
+                'https://api.mobilerider.com/api/media',
                 [
                     200,
                     'application/json',
@@ -274,7 +274,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.devmobilerider.com/api/media',
+                url: 'https://api.mobilerider.com/api/media',
                 method: 'GET',
             });
 
@@ -297,7 +297,7 @@ describe('Client class', function () {
         it('should succeed for a JSON response with `success == true`', function (done) {
             fakeServer.respondWith(
                 'GET',
-                'https://api.devmobilerider.com/api/media',
+                'https://api.mobilerider.com/api/media',
                 [
                     200,
                     'application/json',
@@ -311,7 +311,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.devmobilerider.com/api/media',
+                url: 'https://api.mobilerider.com/api/media',
                 method: 'GET',
             });
 
@@ -334,7 +334,7 @@ describe('Client class', function () {
         it('should fail for a 404 status', function (done) {
             fakeServer.respondWith(
                 'GET',
-                'https://api.devmobilerider.com/api/media',
+                'https://api.mobilerider.com/api/media',
                 [
                     404,
                     'application/json',
@@ -348,7 +348,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.devmobilerider.com/api/media',
+                url: 'https://api.mobilerider.com/api/media',
                 method: 'GET',
             });
 
@@ -367,7 +367,7 @@ describe('Client class', function () {
         it('should fail for a non JSON response', function (done) {
             fakeServer.respondWith(
                 'GET',
-                'https://api.devmobilerider.com/api/media',
+                'https://api.mobilerider.com/api/media',
                 [
                     200,
                     'application/json',
@@ -381,7 +381,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.devmobilerider.com/api/media',
+                url: 'https://api.mobilerider.com/api/media',
                 method: 'GET',
             });
 
