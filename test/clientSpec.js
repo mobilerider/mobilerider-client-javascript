@@ -396,5 +396,31 @@ describe('Client class', function () {
                 }
             );
         });
+
+        it('should fail for an invalid request method', function () {
+            fakeServer.respondWith(
+                'GET',
+                'https://api.mobilerider.com/api/media',
+                [
+                    200,
+                    'application/json',
+                    '<!DOCTYPE html> <html> <head> <meta charset="utf-8"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title></title> <link rel="stylesheet" href=""> </head> <body> </body> </html>'
+                ]
+            );
+
+            var client = new Client({
+                appId: 'someId',
+                appSecret: 'someSecret'
+            });
+
+            expect(function() {
+                var promise = client.request({
+                    url: 'https://api.mobilerider.com/api/media',
+                    method: 'INVALID METHOD',
+                });
+            }).to.throw('Invalid method: INVALID METHOD');
+
+            fakeServer.respond();
+        });
     });
 });

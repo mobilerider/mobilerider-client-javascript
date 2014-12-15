@@ -67,8 +67,9 @@ var Resource = (function () {
         return this.client.request({ url: this.getUrl(), method: 'POST', data: JSON.stringify(finalAttributes) });
     };
 
-    Resource.prototype.save = function (attributes) {
+    Resource.prototype.save = function (attributes, method) {
         // Returns a promise that when resolved it contains a Javascript object representing the object returned by the API
+        method = method && method.toUpperCase() || 'PUT';
 
         var finalAttributes, i, obj, id;
 
@@ -87,7 +88,7 @@ var Resource = (function () {
             id = finalAttributes.id;
             this.validateAttributes(finalAttributes);
         }
-        return this.client.request({ url: this.getUrl(id), method: 'PUT', data: JSON.stringify(attributes) });
+        return this.client.request({ url: this.getUrl(id), method: method, data: JSON.stringify(attributes) });
     };
 
     Resource.prototype.delete = function (id) {
