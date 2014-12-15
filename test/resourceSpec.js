@@ -56,4 +56,19 @@ describe('Resource ("abstract") class', function () {
         requestStub.restore();
         getUrlStub.restore();
     });
+
+    it('should accept request method as argument in save method and pass it to the client request method', function () {
+        var client = new Client({appId: 'someId', appSecret: 'someSecret'}),
+            requestStub = sinon.stub(client, 'request'),
+            resource = new Resource({ client: client }),
+            getUrlStub = sinon.stub(resource, 'getUrl', function() { return 'http://test.com'; });
+
+        resource.save({ id: 1, name: 'any' }, 'patch');
+
+        expect(requestStub.calledOnce);
+        expect(requestStub.getCall(0).args[0]).to.have.deep.property('method', 'PATCH');
+
+        requestStub.restore();
+        getUrlStub.restore();
+    });
 });
