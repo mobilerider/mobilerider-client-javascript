@@ -1227,7 +1227,7 @@ var Utils = (function () {
             throw new Error('Invalid URL: ' + params.url);
         }
 
-        if (['get', 'post', 'put', 'delete'].indexOf(params.method.toLowerCase()) == -1) {
+        if (['get', 'post', 'put', 'patch', 'delete'].indexOf(params.method.toLowerCase()) == -1) {
             throw new Error('Invalid method: ' + params.method);
         }
 
@@ -1255,7 +1255,8 @@ var Utils = (function () {
 
     return Client;
 
-})();var Query = (function () {
+})();
+var Query = (function () {
     'use strict';
 
     var LOOKUPS_LIST = [
@@ -1638,8 +1639,9 @@ var Utils = (function () {
         return this.client.request({ url: this.getUrl(), method: 'POST', data: JSON.stringify(finalAttributes) });
     };
 
-    Resource.prototype.save = function (attributes) {
+    Resource.prototype.save = function (attributes, method) {
         // Returns a promise that when resolved it contains a Javascript object representing the object returned by the API
+        method = method && method.toUpperCase() || 'PUT';
 
         var finalAttributes, i, obj, id;
 
@@ -1658,7 +1660,7 @@ var Utils = (function () {
             id = finalAttributes.id;
             this.validateAttributes(finalAttributes);
         }
-        return this.client.request({ url: this.getUrl(id), method: 'PUT', data: JSON.stringify(attributes) });
+        return this.client.request({ url: this.getUrl(id), method: method, data: JSON.stringify(attributes) });
     };
 
     Resource.prototype.delete = function (id) {
@@ -1699,7 +1701,8 @@ var Utils = (function () {
 
     return Resource;
 
-})();var ChannelResource = (function () {
+})();
+var ChannelResource = (function () {
     'use strict';
 
     var ChannelResource = function () {
