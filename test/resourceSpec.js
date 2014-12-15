@@ -39,6 +39,21 @@ describe('Resource ("abstract") class', function () {
     it('should throw an exception when trying to ask for it\'s URL', function () {
         var resource = new Resource({ appId: 'someId', appSecret: 'someSecret' });
         var url = '';
-        expect(function () { url = resource.getUrl() }).to.throw('Abstract method');
+        expect(function () { url = resource.getUrl(); }).to.throw('Abstract method');
+    });
+
+    it('should set PUT as default param method', function () {
+        var client = new Client({appId: 'someId', appSecret: 'someSecret'}),
+            requestStub = sinon.stub(client, 'request'),
+            resource = new Resource({ client: client }),
+            getUrlStub = sinon.stub(resource, 'getUrl', function() { return 'http://test.com'; });
+
+        resource.save({ id: 1, name: 'any' });
+
+        expect(requestStub.calledOnce);
+        expect(requestStub.getCall(0).args[0]).to.have.deep.property('method', 'PUT');
+
+        requestStub.restore();
+        getUrlStub.restore();
     });
 });
