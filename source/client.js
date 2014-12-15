@@ -96,7 +96,7 @@ var Client = (function () {
             throw new Error('Invalid URL: ' + params.url);
         }
 
-        if (['get', 'post', 'put', 'delete'].indexOf(params.method.toLowerCase()) == -1) {
+        if (['get', 'post', 'put', 'patch', 'delete'].indexOf(params.method.toLowerCase()) == -1) {
             throw new Error('Invalid method: ' + params.method);
         }
 
