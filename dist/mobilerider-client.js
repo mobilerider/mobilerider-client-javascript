@@ -1663,7 +1663,9 @@ var Query = (function () {
         return this.client.request({ url: this.getUrl(id), method: method, data: JSON.stringify(attributes) });
     };
 
-    Resource.prototype.delete = function (id) {
+    // Fix for IE8 raising: `Expected Identifier` when using keyword `delete`
+    // Resource.prototype.delete = function (id) {
+    Resource.prototype['delete'] = function (id) {
         // Return a promise that when resolved notifies the status of the DELETE operation
         return this.client.request({ url: this.getUrl(id), method: 'DELETE' });
     };
