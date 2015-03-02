@@ -5,7 +5,8 @@ if (typeof define === 'function' && define.amd) {
             Client: Client,
             Resource: Resource,
             Media: MediaResource,
-            Channel: ChannelResource
+            Channel: ChannelResource,
+            Settings: Settings
         };
     });
 } else {
@@ -16,6 +17,7 @@ if (typeof define === 'function' && define.amd) {
     exports.mobilerider.Resource = Resource;
     exports.mobilerider.Media = MediaResource;
     exports.mobilerider.Channel = ChannelResource;
+    exports.mobilerider.Settings = Settings;
 }
 
 })(this);
