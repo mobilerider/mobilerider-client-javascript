@@ -28,7 +28,7 @@ describe('Client class', function () {
 
             var clientRequest = function () { return client.request(); };
             expect(clientRequest).to.throw(/^Missing/);
-            clientRequest = function () { return client.request({ url: 'https://api.mobilerider.com/api/media' }); };
+            clientRequest = function () { return client.request({ url: 'media' }); };
             expect(clientRequest).to.throw(/^Missing/);
             clientRequest = function () { return client.request({ method: 'GET' }); };
             expect(clientRequest).to.throw(/^Missing/);
@@ -46,7 +46,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.mobilerider.com/api/media',
+                url: 'media',
                 method: 'GET',
             });
 
@@ -64,7 +64,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.mobilerider.com/api/media',
+                url: 'media',
                 method: 'GET',
             });
 
@@ -85,7 +85,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.mobilerider.com/api/media',
+                url: 'media',
                 method: 'GET',
             });
 
@@ -106,7 +106,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.mobilerider.com/api/media',
+                url: 'media',
                 method: 'GET',
             });
 
@@ -117,7 +117,7 @@ describe('Client class', function () {
             expect(headers).to.have.property('X-Vendor-App-Id', vendorAppId);
         });
 
-        it('should fail for an invalid domain', function () {
+        it('should fail for when the URL is empty or the method is invalid', function () {
             var client = new Client({
                 appId: 'someId',
                 appSecret: 'someSecret'
@@ -125,16 +125,17 @@ describe('Client class', function () {
 
             var clientRequest = function () {
                 client.request({
-                    url: 'http://some-domain.com',
                     method: 'GET',
+                    url: '',
                 });
             };
-            expect(clientRequest).to.throw(/^Invalid URL/);
+
+            expect(clientRequest).to.throw(/^Empty URL/);
 
             clientRequest = function () {
                 client.request({
-                    url: 'https://api.mobilerider.com/api/media',
                     method: 'FORCE',
+                    url: 'media',
                 });
             };
             expect(clientRequest).to.throw(/^Invalid method/);
@@ -157,7 +158,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.mobilerider.com/api/media',
+                url: 'media',
                 method: 'GET',
             });
 
@@ -196,7 +197,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.mobilerider.com/api/media',
+                url: 'media',
                 method: 'GET',
             });
 
@@ -234,7 +235,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.mobilerider.com/api/media',
+                url: 'media',
                 method: 'GET',
             });
 
@@ -274,7 +275,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.mobilerider.com/api/media',
+                url: 'media',
                 method: 'GET',
             });
 
@@ -311,7 +312,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.mobilerider.com/api/media',
+                url: 'media',
                 method: 'GET',
             });
 
@@ -348,7 +349,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.mobilerider.com/api/media',
+                url: 'media',
                 method: 'GET',
             });
 
@@ -381,7 +382,7 @@ describe('Client class', function () {
             });
 
             var promise = client.request({
-                url: 'https://api.mobilerider.com/api/media',
+                url: 'media',
                 method: 'GET',
             });
 
@@ -415,12 +416,80 @@ describe('Client class', function () {
 
             expect(function() {
                 var promise = client.request({
-                    url: 'https://api.mobilerider.com/api/media',
+                    url: 'media',
                     method: 'INVALID METHOD',
                 });
             }).to.throw('Invalid method: INVALID METHOD');
 
             fakeServer.respond();
+        });
+
+        it('should strip the leading slash from the url', function (done) {
+            fakeServer.respondWith(
+                'GET',
+                'https://api.mobilerider.com/api/media',
+                [
+                    200,
+                    'application/json',
+                    '{ "success": true, "object": [] }'
+                ]
+            );
+
+            var client = new Client({
+                appId: 'someId',
+                appSecret: 'someSecret'
+            });
+
+            var promise = client.request({
+                url: '/media',
+                method: 'GET',
+            });
+
+            fakeServer.respond();
+
+            promise.then(
+                function (response) {
+                    done();
+                },
+                function (response) {
+                    done(new Error('Failed response'));
+                }
+            );
+        });
+
+        it('should a different endpoint if set in the constructor options', function (done) {
+            fakeServer.respondWith(
+                'GET',
+                'https://lol.mobilerider.com/api/media',
+                [
+                    200,
+                    'application/json',
+                    '{ "success": true, "object": [] }'
+                ]
+            );
+
+            var client = new Client({
+                appId: 'someId',
+                appSecret: 'someSecret',
+                endpointPrefix: 'https://lol.mobilerider.com/api/'
+            });
+
+            var promise = client.request({
+                url: '/media',
+                method: 'GET',
+            });
+
+            fakeServer.respond();
+
+            promise.then(
+                function (response) {
+                    done();
+                },
+                function (response) {
+                    done(new Error('Failed response'+response));
+                }
+            );
+
         });
     });
 });

@@ -2,23 +2,26 @@ var Resource = (function () {
     'use strict';
 
     var Resource = function (options) {
-        options = options || {};
-        this.client = options.client;
+        var self = this;
 
-        if (!this.client) {
+        options = options || {};
+        self.client = options.client;
+
+        if (!self.client) {
             if (!options.appId || !options.appSecret) {
                 throw new Error('You must pass a `Client` instance or `appId` and `appSecret`.');
             }
-            this.client = new Client({
+            self.client = new Client({
                 appId: options.appId,
                 appSecret: options.appSecret,
-                subVendorAppId: options.subVendorAppId
+                subVendorAppId: options.subVendorAppId,
+                endpointPrefix: options.endpointPrefix
             });
-        } else if (!(this.client instanceof Client)) {
-            throw new TypeError('You must pass a valid client instance, got an ' + (typeof this.client));
+        } else if (!(self.client instanceof Client)) {
+            throw new TypeError('You must pass a valid client instance, got an ' + (typeof self.client));
         }
 
-        this.initialize.apply(this, arguments);
+        self.initialize.apply(self, arguments);
     };
 
     Resource.prototype.initialize = function () {};
@@ -42,53 +45,53 @@ var Resource = (function () {
 
     Resource.prototype.get = function (id) {
         // Returns a promise that when resolved it contains a Javascript object representing the object returned by the API
-
-        id = this.validateId(id);
-        return this.client.request({ url: this.getUrl(id), method: 'GET' });
+        var self = this;
+        id = self.validateId(id);
+        return self.client.request({ url: self.getUrl(id), method: 'GET' });
     };
 
     Resource.prototype.create = function (attributes) {
         // Returns a promise that when resolved it contains a Javascript object representing the object returned by the API
 
-        var finalAttributes, i, obj;
+        var self = this, finalAttributes, i, obj;
         if (Utils.isArray(attributes)) {
             finalAttributes = [];
             for (i = attributes.length - 1; i >= 0; i--) {
                 obj = Utils.extend({}, attributes[i]);
                 delete obj.id;
-                this.validateAttributes(obj);
+                self.validateAttributes(obj);
                 finalAttributes.push(obj);
             }
         } else {
             finalAttributes = Utils.extend({}, attributes);
             delete finalAttributes.id;
-            this.validateAttributes(finalAttributes);
+            self.validateAttributes(finalAttributes);
         }
-        return this.client.request({ url: this.getUrl(), method: 'POST', data: JSON.stringify(finalAttributes) });
+        return self.client.request({ url: self.getUrl(), method: 'POST', data: JSON.stringify(finalAttributes) });
     };
 
     Resource.prototype.save = function (attributes, method) {
         // Returns a promise that when resolved it contains a Javascript object representing the object returned by the API
-        method = method && method.toUpperCase() || 'PUT';
+        var self = this, finalAttributes, i, obj, id;
 
-        var finalAttributes, i, obj, id;
+        method = method && ('' + method).toUpperCase() || 'PUT';
 
         if (Utils.isArray(attributes)) {
             finalAttributes = [];
             for (i = attributes.length - 1; i >= 0; i--) {
                 obj = Utils.extend({}, attributes[i]);
-                this.validateId(obj.id);
-                this.validateAttributes(obj);
+                self.validateId(obj.id);
+                self.validateAttributes(obj);
                 finalAttributes.push(obj);
             }
 
         } else {
             finalAttributes = Utils.extend({}, attributes);
-            this.validateId(finalAttributes.id);
+            self.validateId(finalAttributes.id);
             id = finalAttributes.id;
-            this.validateAttributes(finalAttributes);
+            self.validateAttributes(finalAttributes);
         }
-        return this.client.request({ url: this.getUrl(id), method: method, data: JSON.stringify(attributes) });
+        return self.client.request({ url: self.getUrl(id), method: method, data: JSON.stringify(attributes) });
     };
 
     Resource.prototype.delete = function (id) {

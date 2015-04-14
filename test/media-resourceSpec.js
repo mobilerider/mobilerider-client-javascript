@@ -18,14 +18,9 @@ describe('MediaResource', function () {
     it('should have a valid URL', function () {
         var mediaRsrc = new MediaResource({ appId: 'someId', appSecret: 'someSecret' });
         var url = mediaRsrc.getUrl();
-
-        if (url[url.length - 1] != '/') {
-            url += '/';
-        }
-
-        expect(url).to.match(/\/media\/$/);
-        url += '4';
+        expect(url).to.eql('media');
+        url += '/4';
         expect(mediaRsrc.getUrl(4)).to.eql(url);
-        expect(url).to.match(/\/media\/4$/);
+        expect(url).to.eql('media/4');
     });
 });
