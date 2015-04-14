@@ -100,7 +100,7 @@ var Client = (function () {
     };
 
     Client.prototype.request = function (params) {
-        var self = this, url, method;
+        var self = this, url, method, trailingSlash = self.options.trailingSlash;
         params = params || {};
         var i, requiredParams = ['url', 'method'];
         for (i = requiredParams.length - 1; i >= 0; i--) {
@@ -116,6 +116,15 @@ var Client = (function () {
         if (url[0] == '/') {
             url = url.substr(1);
         }
+
+        var lastIndex = url.length - 1;
+        if (trailingSlash === true && url[lastIndex] != '/') {
+            url += '/';
+        }
+        if (trailingSlash === false && url[lastIndex] == '/') {
+            url = url.substr(0, lastIndex);
+        }
+
         params.url = self.options.endpointPrefix + url;
 
         method = ('' + params.method).toUpperCase();

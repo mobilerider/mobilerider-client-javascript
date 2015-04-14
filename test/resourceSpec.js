@@ -9,7 +9,7 @@ describe('Resource ("abstract") class', function () {
         expect(resource.client).to.be.an('object');
         expect(resource.client).to.have.property('request');
         expect(resource.client.request).to.be.a('function');
-        expect(resource.client.options).to.have.property('subVendorAppId');
+        expect(resource.client.options.subVendorAppId).to.be.empty;
 
         expect(initializeSpy.calledOnce).to.be.ok;
         expect(initializeSpy.getCall(0).args).to.have.length(1);

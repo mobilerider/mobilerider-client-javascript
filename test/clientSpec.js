@@ -491,5 +491,113 @@ describe('Client class', function () {
             );
 
         });
+
+        // appendTrailingSlash
+        // stripTrailingSlash
+
+        it('should append the trailing slash if the option is `true`', function (done) {
+            fakeServer.respondWith(
+                'GET',
+                'https://lol.mobilerider.com/api/media/',
+                [
+                    200,
+                    'application/json',
+                    '{ "success": true, "object": [] }'
+                ]
+            );
+
+            var client = new Client({
+                appId: 'someId',
+                appSecret: 'someSecret',
+                endpointPrefix: 'https://lol.mobilerider.com/api/',
+                trailingSlash: true,
+            });
+
+            var promise = client.request({
+                url: 'media',
+                method: 'GET',
+            });
+
+            fakeServer.respond();
+
+            promise.then(
+                function (response) {
+                    done();
+                },
+                function (response) {
+                    done(new Error('Failed response'+response));
+                }
+            );
+        });
+
+        it('should strip the trailing slash if the option is `false`', function (done) {
+            fakeServer.respondWith(
+                'GET',
+                'https://lol.mobilerider.com/api/media',
+                [
+                    200,
+                    'application/json',
+                    '{ "success": true, "object": [] }'
+                ]
+            );
+
+            var client = new Client({
+                appId: 'someId',
+                appSecret: 'someSecret',
+                endpointPrefix: 'https://lol.mobilerider.com/api/',
+                trailingSlash: false,
+            });
+
+            var promise = client.request({
+                url: 'media/',
+                method: 'GET',
+            });
+
+            fakeServer.respond();
+
+            promise.then(
+                function (response) {
+                    done();
+                },
+                function (response) {
+                    done(new Error('Failed response'+response));
+                }
+            );
+        });
+
+        it('should not add trailing slash if the option is not `true`', function (done) {
+            fakeServer.respondWith(
+                'GET',
+                'https://lol.mobilerider.com/api/media',
+                [
+                    200,
+                    'application/json',
+                    '{ "success": true, "object": [] }'
+                ]
+            );
+
+            var client = new Client({
+                appId: 'someId',
+                appSecret: 'someSecret',
+                endpointPrefix: 'https://lol.mobilerider.com/api/',
+                trailingSlash: 1,
+            });
+
+            var promise = client.request({
+                url: 'media',
+                method: 'GET',
+            });
+
+            fakeServer.respond();
+
+            promise.then(
+                function (response) {
+                    done();
+                },
+                function (response) {
+                    done(new Error('Failed response'+response));
+                }
+            );
+        });
     });
 });

@@ -1280,7 +1280,7 @@ var Utils = (function () {
     };
 
     Client.prototype.request = function (params) {
-        var self = this, url, method;
+        var self = this, url, method, trailingSlash = self.options.trailingSlash;
         params = params || {};
         var i, requiredParams = ['url', 'method'];
         for (i = requiredParams.length - 1; i >= 0; i--) {
@@ -1296,6 +1296,15 @@ var Utils = (function () {
         if (url[0] == '/') {
             url = url.substr(1);
         }
+
+        var lastIndex = url.length - 1;
+        if (trailingSlash === true && url[lastIndex] != '/') {
+            url += '/';
+        }
+        if (trailingSlash === false && url[lastIndex] == '/') {
+            url = url.substr(0, lastIndex);
+        }
+
         params.url = self.options.endpointPrefix + url;
 
         method = ('' + params.method).toUpperCase();
@@ -1656,12 +1665,9 @@ var Query = (function () {
             if (!options.appId || !options.appSecret) {
                 throw new Error('You must pass a `Client` instance or `appId` and `appSecret`.');
             }
-            self.client = new Client({
-                appId: options.appId,
-                appSecret: options.appSecret,
-                subVendorAppId: options.subVendorAppId,
-                endpointPrefix: options.endpointPrefix
-            });
+
+            self.client = new Client(options);
+
         } else if (!(self.client instanceof Client)) {
             throw new TypeError('You must pass a valid client instance, got an ' + (typeof self.client));
         }
