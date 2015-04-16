@@ -61,7 +61,7 @@ var Query = (function () {
             throw new TypeError('Operator: Invalid operator name: ' + name);
         }
         var arrayLike = filters && (filters.length == +filters.length);
-        if (typeof filters != 'undefined' && arrayLike && typeof filters == 'string') {
+        if (!Utils.undef(filters) && arrayLike && Utils.isstr(filters)) {
             throw new TypeError('If present the `filters` parameter must be an Array');
         }
         this.name = name;
@@ -102,7 +102,7 @@ var Query = (function () {
                 newFilters.push(tupleToObj(value));
             } else if (value instanceof Operator) {
                 newFilters.push(value.clone());
-            } else if (typeof key == 'string') {
+            } else if (Utils.isstr(key)) {
                 self.validateField(key);
                 newFilters.push(tupleToObj(key, value));
             } else if (Utils.isObject(value)) {

@@ -5,7 +5,9 @@ var Requests = (function (undefined) {
 
   var win = window
     , doc = document
-    , twoHundo = /^(20\d|1223)$/
+    , httpsRe = /^http/
+    , protocolRe = /(^\w+):\/\//
+    , twoHundo = /^(20\d|1223)$/ //http://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
     , byTag = 'getElementsByTagName'
     , readyState = 'readyState'
     , contentType = 'Content-Type'
@@ -60,14 +62,21 @@ var Requests = (function (undefined) {
         }
       }
 
+  function succeed(r) {
+    var protocol = protocolRe.exec(r.url);
+    protocol = (protocol && protocol[1]) || window.location.protocol;
+    return httpsRe.test(protocol) ? twoHundo.test(r.request.status) : !!r.request.response;
+  }
+
   function handleReadyState(r, success, error) {
     return function () {
       // use _aborted to mitigate against IE err c00c023f
       // (can't read props on aborted request objects)
       if (r._aborted) return error(r.request)
+      if (r._timedOut) return error(r.request, 'Request is aborted: timeout')
       if (r.request && r.request[readyState] == 4) {
         r.request.onreadystatechange = noop
-        if (twoHundo.test(r.request.status)) success(r.request)
+        if (succeed(r)) success(r.request)
         else
           error(r.request)
       }
@@ -82,9 +91,10 @@ var Requests = (function (undefined) {
       || defaultHeaders['accept'][o['type']]
       || defaultHeaders['accept']['*']
 
+    var isAFormData = typeof FormData === 'function' && (o['data'] instanceof FormData);
     // breaks cross-origin requests with legacy browsers
     if (!o['crossOrigin'] && !headers[requestedWith]) headers[requestedWith] = defaultHeaders['requestedWith']
-    if (!headers[contentType]) headers[contentType] = o['contentType'] || defaultHeaders['contentType']
+    if (!headers[contentType] && !isAFormData) headers[contentType] = o['contentType'] || defaultHeaders['contentType']
     for (h in headers)
       headers.hasOwnProperty(h) && 'setRequestHeader' in http && http.setRequestHeader(h, headers[h])
   }
@@ -250,7 +260,7 @@ var Requests = (function (undefined) {
 
     if (o['timeout']) {
       this.timeout = setTimeout(function () {
-        self.abort()
+        timedOut()
       }, o['timeout'])
     }
 
@@ -281,7 +291,7 @@ var Requests = (function (undefined) {
     }
 
     function success (resp) {
-      var type = o['type'] || setType(resp.getResponseHeader('Content-Type'))
+      var type = o['type'] || resp && setType(resp.getResponseHeader('Content-Type')) // resp can be undefined in IE
       resp = (type !== 'jsonp') ? self.request : resp
       // use global data filter on response text
       var filteredResponse = globalSetupOptions.dataFilter(resp.responseText, type)
@@ -326,6 +336,11 @@ var Requests = (function (undefined) {
       }
 
       complete(resp)
+    }
+
+    function timedOut() {
+      self._timedOut = true
+      self.request.abort()      
     }
 
     function error(resp, msg, t) {
@@ -397,6 +412,9 @@ var Requests = (function (undefined) {
         this._errorHandlers.push(fn)
       }
       return this
+    }
+  , 'catch': function (fn) {
+      return this.fail(fn)
     }
   }
 
@@ -592,7 +610,7 @@ var Requests = (function (undefined) {
 * attempt of a simple defer/promise library for mobile development
 * @author Jonathan Gotti < jgotti at jgotti dot net>
 * @since 2012-10
-* @version 0.6.0
+* @version 0.7.0
 * @changelog
 *           - 2013-12-07 - last promise 1.1 specs test passings (thx to wizardwerdna)
  *                       - reduce promises footprint by unscoping methods that could be
@@ -792,7 +810,7 @@ var Promises = (function (undef) {
 
 				, rethrow: promise_rethrow
 
-				, isPending: function(){ return !!(status === 0); }
+				, isPending: function(){ return status === 0; }
 
 				, getStatus: function(){ return status; }
 
@@ -916,13 +934,13 @@ var Promises = (function (undef) {
 
 	/**
 	 * return a promise for the return value of function call which will be fulfilled in delay ms or rejected if given fn throw an error
-	 * @param {function} fn
+	 * @param {*} fn to execute or value to return after given delay
 	 * @param {int} [delay] in ms default to 0
 	 * @returns {promise}
 	 */
 	defer.delay = function(fn, delay){
 		var d = defer();
-		setTimeout(function(){ try{ d.resolve(fn.apply(null)); }catch(e){ d.reject(e); } }, delay || 0);
+		setTimeout(function(){ try{ d.resolve(isFunc(fn) ? fn.apply(null) : fn); }catch(e){ d.reject(e); } }, delay || 0);
 		return d.promise;
 	};
 
@@ -955,19 +973,15 @@ var Promises = (function (undef) {
 				promises[i] = defer.promisify(promises[i]);
 				promises[i].then(
 					function(v){
-						if (! (i in args) ) { //@todo check this is still required as promises can't be resolve more than once
-							args[i] = returnPromises ? promises[i] : v;
-							(--c) || d.resolve(args);
-						}
+						args[i] = returnPromises ? promises[i] : v;
+						(--c) || d.resolve(args);
 					}
 					, function(e){
-						if(! (i in args) ){
-							if( ! returnPromises ){
-								d.reject(e);
-							} else {
-								args[i] = promises[i];
-								(--c) || d.resolve(args);
-							}
+						if( ! returnPromises ){
+							d.reject(e);
+						} else {
+							args[i] = promises[i];
+							(--c) || d.resolve(args);
 						}
 					}
 				);
@@ -976,6 +990,22 @@ var Promises = (function (undef) {
 				resolver(i);
 			}
 		}
+		return d.promise;
+	}
+
+	function sequenceZenifier(promise, zenValue){
+		return promise.then(isFunc(zenValue) ? zenValue : function(){return zenValue;});
+	}
+	function sequencePromiseResolver(callerArguments){
+		var funcs = slice(callerArguments);
+		if ( funcs.length === 1 && isArray(funcs[0]) ) {
+			funcs = funcs[0];
+		}
+		var d = defer(), i=0, l=funcs.length, promise = defer.resolved();
+		for(; i<l; i++){
+			promise = sequenceZenifier(promise, funcs[i]);
+		}
+		d.resolve(promise);
 		return d.promise;
 	}
 
@@ -995,6 +1025,16 @@ var Promises = (function (undef) {
 	 * @returns {promise} of the list of given promises
 	 */
 	defer.resolveAll = function(){ return multiPromiseResolver(arguments,true); };
+
+	/**
+	* execute given function in sequence passing their returned values to the next one in sequence.
+	* You can pass values or promise instead of functions they will be passed in the sequence as if a function returned them.
+	* if any function throw an error or a rejected promise the final returned promise will be rejected with that reason.
+	* @param {array|...*} [function] list of function to call in sequence receiving previous one as a parameter
+	*                     (non function values will be treated as if returned by a function)
+	* @returns {promise} of the list of given promises
+	*/
+	defer.sequence = function(){ return sequencePromiseResolver(arguments); };
 
 	/**
 	 * transform a typical nodejs async method awaiting a callback as last parameter, receiving error as first parameter to a function that
@@ -1042,6 +1082,7 @@ var Utils = (function () {
         nativeSome = Array.prototype.some,
         toString = Object.prototype.toString,
         nativeMap = Array.prototype.map,
+        nativeSlice = Array.prototype.slice,
         isArray = nativeIsArray || function (array) {
             return toString.call(obj) == '[object Array]';
         },
@@ -1050,7 +1091,13 @@ var Utils = (function () {
             return obj === Object(obj);
         },
         slice = function (array) {
-            return Array.prototype.slice.apply(array, Array.prototype.slice.call(arguments, 1));
+            return nativeSlice.apply(array, nativeSlice.call(arguments, 1));
+        },
+        undef = function (x) {
+            return typeof x == 'undefined';
+        },
+        isstr = function (x) {
+            return typeof x == 'string';
         },
         keys = Object.keys || function (obj) {
             if (obj !== Object(obj)) throw new TypeError('Invalid object');
@@ -1059,7 +1106,7 @@ var Utils = (function () {
             return keys;
         },
         each = function (obj, iterator, context) {
-            if (obj === null || typeof obj == 'undefined') return;
+            if (obj === null || undef(obj)) return;
             var i, length;
             if (nativeForEach && obj.forEach === nativeForEach) {
                 obj.forEach(iterator, context);
@@ -1127,94 +1174,113 @@ var Utils = (function () {
         isObject: isObject,
         any: any,
         some: any,
-        map: map
+        map: map,
+        undef: undef,
+        isstr: isstr
     };
 })();var Client = (function () {
     'use strict';
 
     var Client = function (options) {
-        this.options = Utils.extend({}, options || {});
-        if (!(this.options.appId && this.options.appSecret)) {
+        var self = this, endpointPrefix;
+        options = self.options = Utils.extend({}, options || {});
+        endpointPrefix = options.endpointPrefix || Settings.endpointPrefix;
+        if (endpointPrefix[endpointPrefix.length - 1] != '/') {
+            endpointPrefix += '/';
+        }
+        options.endpointPrefix = endpointPrefix;
+
+        if (!(options.appId && options.appSecret)) {
             throw new Error('You must provide `appId` and `appSecret` in the options.');
         }
     };
 
     Client.prototype._getRequestHeaders = function () {
-        var headers = {
-            Authorization: 'Basic ' + btoa(unescape(encodeURIComponent(this.options.appId + ':' + this.options.appSecret)))
-        };
+        var self = this,
+            options = self.options,
+            headers = {
+                Authorization: 'Basic ' + btoa(unescape(encodeURIComponent(options.appId + ':' + options.appSecret)))
+            };
 
-        if (this.options.subVendorAppId) {
-            headers['X-Vendor-App-Id'] = this.options.subVendorAppId;
+        if (options.subVendorAppId) {
+            headers['X-Vendor-App-Id'] = options.subVendorAppId;
         }
 
         return headers;
     };
 
     Client.prototype.resolvePromise = function (promise, response, rootKeys) {
-        var copyKeys = (rootKeys && rootKeys.length) ? Utils.map(rootKeys) : ['success', 'object', 'objects'],
-            result;
-        if (typeof response !== 'object') {
-            promise.reject({
+        var self = this,
+            copyKeys = (rootKeys && rootKeys.length)
+                ? Utils.map(rootKeys)
+                : ['success', 'object', 'objects'];
+
+        var responseToResult = function (response) {
+            var result = { meta: {} };
+            Utils.each(response, function (value, key) {
+                if (key != 'meta') {
+                    if (copyKeys.indexOf(key) != -1) {
+                        result[key] = value;
+                    } else {
+                        result.meta[key] = value;
+                    }
+                } else {
+                    Utils.each(response.meta, function (value, key) {
+                        result.meta[key] = value;
+                    });
+                }
+            });
+            return result;
+        };
+
+        if (Utils.isArray(response)) {
+            promise.resolve(responseToResult({
+                success: true,
+                objects: response,
+            }));
+        }
+        else
+        if (self.options.trustStatusCode) {
+            response.success = response.success || true;
+            promise.resolve(responseToResult(response));
+        }
+        else
+        if (!Utils.isObject(response)) {
+            promise.reject(responseToResult({
                 success: false,
                 meta: {
                     status: 'Invalid response from the server',
                     response: response + ''
                 }
-            });
-        } else if (!response.success) {
-            result = { meta: {} };
-            Utils.each(response, function (value, key) {
-                if (key != 'meta') {
-                    if (copyKeys.indexOf(key) != -1) {
-                        result[key] = value;
-                    } else {
-                        result.meta[key] = value;
-                    }
-                } else {
-                    Utils.each(response.meta, function (value, key) {
-                        result.meta[key] = value;
-                    });
-                }
-            });
-            promise.reject(result);
-        } else {
-            result = { meta: {} };
-            Utils.each(response, function (value, key) {
-                if (key != 'meta') {
-                    if (copyKeys.indexOf(key) != -1) {
-                        result[key] = value;
-                    } else {
-                        result.meta[key] = value;
-                    }
-                } else {
-                    Utils.each(response.meta, function (value, key) {
-                        result.meta[key] = value;
-                    });
-                }
-            });
-            promise.resolve(result);
+            }));
+        }
+        else
+        if (!response.success) {
+            promise.reject(responseToResult(response));
+        }
+        else {
+            promise.resolve(responseToResult(response));
         }
         return promise;
     };
 
     Client.prototype.rejectPromiseFromXhr = function (promise, xhr) {
-        var errorResponse;
+        var errorResponse, meta;
         try {
             errorResponse = JSON.parse(xhr.responseText);
         } catch (exception) {
             errorResponse = {};
         }
-        errorResponse.meta = errorResponse.meta || {};
-        errorResponse.meta.statusCode = xhr.status;
-        errorResponse.meta.statusText = xhr.statusText;
-        errorResponse.meta.responseText = xhr.responseText;
+        meta = errorResponse.meta = errorResponse.meta || {};
+        meta.statusCode = xhr.status;
+        meta.statusText = xhr.statusText;
+        meta.responseText = xhr.responseText;
         promise.reject(errorResponse);
         return promise;
     };
 
     Client.prototype.request = function (params) {
-        var self = this;
+        var self = this, url, method, trailingSlash = self.options.trailingSlash;
         params = params || {};
         var i, requiredParams = ['url', 'method'];
         for (i = requiredParams.length - 1; i >= 0; i--) {
@@ -1223,19 +1289,35 @@ var Utils = (function () {
             }
         }
 
-        if (params.url.indexOf(Settings.endpointPrefix) !== 0) {
-            throw new Error('Invalid URL: ' + params.url);
+        url = params.url;
+        if (!url) {
+            throw new Error('Empty URL');
+        }
+        if (url[0] == '/') {
+            url = url.substr(1);
         }
 
-        if (['get', 'post', 'put', 'patch', 'delete'].indexOf(params.method.toLowerCase()) == -1) {
-            throw new Error('Invalid method: ' + params.method);
+        var lastIndex = url.length - 1;
+        if (trailingSlash === true && url[lastIndex] != '/') {
+            url += '/';
         }
+        if (trailingSlash === false && url[lastIndex] == '/') {
+            url = url.substr(0, lastIndex);
+        }
+
+        params.url = self.options.endpointPrefix + url;
+
+        method = ('' + params.method).toUpperCase();
+        if (['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].indexOf(method) == -1) {
+            throw new Error('Invalid method: ' + (method || '<empty>'));
+        }
+        params.method = method;
 
         params = Utils.extend(
             {
                 type: 'json',
                 contentType: 'application/json',
-                headers: this._getRequestHeaders()
+                headers: self._getRequestHeaders()
             },
             params
         );
@@ -1319,7 +1401,7 @@ var Query = (function () {
             throw new TypeError('Operator: Invalid operator name: ' + name);
         }
         var arrayLike = filters && (filters.length == +filters.length);
-        if (typeof filters != 'undefined' && arrayLike && typeof filters == 'string') {
+        if (!Utils.undef(filters) && arrayLike && Utils.isstr(filters)) {
             throw new TypeError('If present the `filters` parameter must be an Array');
         }
         this.name = name;
@@ -1360,7 +1442,7 @@ var Query = (function () {
                 newFilters.push(tupleToObj(value));
             } else if (value instanceof Operator) {
                 newFilters.push(value.clone());
-            } else if (typeof key == 'string') {
+            } else if (Utils.isstr(key)) {
                 self.validateField(key);
                 newFilters.push(tupleToObj(key, value));
             } else if (Utils.isObject(value)) {
@@ -1574,23 +1656,23 @@ var Query = (function () {
     'use strict';
 
     var Resource = function (options) {
-        options = options || {};
-        this.client = options.client;
+        var self = this;
 
-        if (!this.client) {
+        options = options || {};
+        self.client = options.client;
+
+        if (!self.client) {
             if (!options.appId || !options.appSecret) {
                 throw new Error('You must pass a `Client` instance or `appId` and `appSecret`.');
             }
-            this.client = new Client({
-                appId: options.appId,
-                appSecret: options.appSecret,
-                subVendorAppId: options.subVendorAppId
-            });
-        } else if (!(this.client instanceof Client)) {
-            throw new TypeError('You must pass a valid client instance, got an ' + (typeof this.client));
+
+            self.client = new Client(options);
+
+        } else if (!(self.client instanceof Client)) {
+            throw new TypeError('You must pass a valid client instance, got an ' + (typeof self.client));
         }
 
-        this.initialize.apply(this, arguments);
+        self.initialize.apply(self, arguments);
     };
 
     Resource.prototype.initialize = function () {};
@@ -1614,53 +1696,53 @@ var Query = (function () {
 
     Resource.prototype.get = function (id) {
         // Returns a promise that when resolved it contains a Javascript object representing the object returned by the API
-
-        id = this.validateId(id);
-        return this.client.request({ url: this.getUrl(id), method: 'GET' });
+        var self = this;
+        id = self.validateId(id);
+        return self.client.request({ url: self.getUrl(id), method: 'GET' });
     };
 
     Resource.prototype.create = function (attributes) {
         // Returns a promise that when resolved it contains a Javascript object representing the object returned by the API
 
-        var finalAttributes, i, obj;
+        var self = this, finalAttributes, i, obj;
         if (Utils.isArray(attributes)) {
             finalAttributes = [];
             for (i = attributes.length - 1; i >= 0; i--) {
                 obj = Utils.extend({}, attributes[i]);
                 delete obj.id;
-                this.validateAttributes(obj);
+                self.validateAttributes(obj);
                 finalAttributes.push(obj);
             }
         } else {
             finalAttributes = Utils.extend({}, attributes);
             delete finalAttributes.id;
-            this.validateAttributes(finalAttributes);
+            self.validateAttributes(finalAttributes);
         }
-        return this.client.request({ url: this.getUrl(), method: 'POST', data: JSON.stringify(finalAttributes) });
+        return self.client.request({ url: self.getUrl(), method: 'POST', data: JSON.stringify(finalAttributes) });
     };
 
     Resource.prototype.save = function (attributes, method) {
         // Returns a promise that when resolved it contains a Javascript object representing the object returned by the API
-        method = method && method.toUpperCase() || 'PUT';
+        var self = this, finalAttributes, i, obj, id;
 
-        var finalAttributes, i, obj, id;
+        method = method && ('' + method).toUpperCase() || 'PUT';
 
         if (Utils.isArray(attributes)) {
             finalAttributes = [];
             for (i = attributes.length - 1; i >= 0; i--) {
                 obj = Utils.extend({}, attributes[i]);
-                this.validateId(obj.id);
-                this.validateAttributes(obj);
+                self.validateId(obj.id);
+                self.validateAttributes(obj);
                 finalAttributes.push(obj);
             }
 
         } else {
             finalAttributes = Utils.extend({}, attributes);
-            this.validateId(finalAttributes.id);
+            self.validateId(finalAttributes.id);
             id = finalAttributes.id;
-            this.validateAttributes(finalAttributes);
+            self.validateAttributes(finalAttributes);
         }
-        return this.client.request({ url: this.getUrl(id), method: method, data: JSON.stringify(attributes) });
+        return self.client.request({ url: self.getUrl(id), method: method, data: JSON.stringify(attributes) });
     };
 
     Resource.prototype.delete = function (id) {
@@ -1714,9 +1796,9 @@ var ChannelResource = (function () {
     ChannelResource.prototype.constructor = ChannelResource;
 
     ChannelResource.prototype.getUrl = function (id) {
-        id = typeof id != 'undefined' ? this.validateId(id) : id;
-        var url = Settings.endpointPrefix + '/channel';
-        if (url[url.length - 1] != '/' && !!id) {
+        id = (!Utils.undef(id)) ? this.validateId(id) : id;
+        var url = 'channel';
+        if (id) {
             url += ('/' + id);
         }
         return url;
@@ -1736,9 +1818,9 @@ var ChannelResource = (function () {
     MediaResource.prototype.constructor = MediaResource;
 
     MediaResource.prototype.getUrl = function (id) {
-        id = typeof id != 'undefined' ? this.validateId(id) : id;
-        var url = Settings.endpointPrefix + '/media';
-        if (url[url.length - 1] != '/' && !!id) {
+        id = (!Utils.undef(id)) ? this.validateId(id) : id;
+        var url = 'media';
+        if (id) {
             url += ('/' + id);
         }
         return url;

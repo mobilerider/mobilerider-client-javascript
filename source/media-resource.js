@@ -10,9 +10,9 @@ var MediaResource = (function () {
     MediaResource.prototype.constructor = MediaResource;
 
     MediaResource.prototype.getUrl = function (id) {
-        id = typeof id != 'undefined' ? this.validateId(id) : id;
-        var url = Settings.endpointPrefix + '/media';
-        if (url[url.length - 1] != '/' && !!id) {
+        id = (!Utils.undef(id)) ? this.validateId(id) : id;
+        var url = 'media';
+        if (id) {
             url += ('/' + id);
         }
         return url;

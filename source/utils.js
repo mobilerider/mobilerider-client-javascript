@@ -6,6 +6,7 @@ var Utils = (function () {
         nativeSome = Array.prototype.some,
         toString = Object.prototype.toString,
         nativeMap = Array.prototype.map,
+        nativeSlice = Array.prototype.slice,
         isArray = nativeIsArray || function (array) {
             return toString.call(obj) == '[object Array]';
         },
@@ -14,7 +15,13 @@ var Utils = (function () {
             return obj === Object(obj);
         },
         slice = function (array) {
-            return Array.prototype.slice.apply(array, Array.prototype.slice.call(arguments, 1));
+            return nativeSlice.apply(array, nativeSlice.call(arguments, 1));
+        },
+        undef = function (x) {
+            return typeof x == 'undefined';
+        },
+        isstr = function (x) {
+            return typeof x == 'string';
         },
         keys = Object.keys || function (obj) {
             if (obj !== Object(obj)) throw new TypeError('Invalid object');
@@ -23,7 +30,7 @@ var Utils = (function () {
             return keys;
         },
         each = function (obj, iterator, context) {
-            if (obj === null || typeof obj == 'undefined') return;
+            if (obj === null || undef(obj)) return;
             var i, length;
             if (nativeForEach && obj.forEach === nativeForEach) {
                 obj.forEach(iterator, context);
@@ -91,6 +98,8 @@ var Utils = (function () {
         isObject: isObject,
         any: any,
         some: any,
-        map: map
+        map: map,
+        undef: undef,
+        isstr: isstr
     };
 })();

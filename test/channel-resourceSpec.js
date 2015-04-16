@@ -23,14 +23,10 @@ describe('ChannelResource', function () {
         var channel = new ChannelResource({ appId: 'someId', appSecret: 'someSecret' });
         var url = channel.getUrl();
 
-        if (url[url.length - 1] != '/') {
-            url += '/';
-        }
-
-        expect(url).to.match(/\/channel\/$/);
-        url += '4';
+        expect(url).to.eql('channel');
+        url += '/4';
         expect(channel.getUrl(4)).to.eql(url);
-        expect(url).to.match(/\/channel\/4$/);
+        expect(url).to.eql('channel/4');
     });
 
     describe('CRUD tests', function () {
