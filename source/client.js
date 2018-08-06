@@ -10,7 +10,7 @@ var Client = (function () {
         }
         options.endpointPrefix = endpointPrefix;
 
-        if (!options.token || !(options.appId && options.appSecret)) {
+        if (!options.token && !(options.appId && options.appSecret)) {
             throw new Error('You must provide `token` or `appId` and `appSecret` in the options.');
         }
     };
