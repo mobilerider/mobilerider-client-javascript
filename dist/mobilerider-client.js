@@ -1190,17 +1190,25 @@ var Utils = (function () {
         }
         options.endpointPrefix = endpointPrefix;
 
-        if (!(options.appId && options.appSecret)) {
-            throw new Error('You must provide `appId` and `appSecret` in the options.');
+        if (!options.token || !(options.appId && options.appSecret)) {
+            throw new Error('You must provide `token` or `appId` and `appSecret` in the options.');
         }
     };
 
     Client.prototype._getRequestHeaders = function () {
         var self = this,
             options = self.options,
+            headers;
+
+        if (options.token) {
+            headers = {
+                Authorization: 'Bearer ' + options.token
+            };
+        } else {
             headers = {
                 Authorization: 'Basic ' + btoa(unescape(encodeURIComponent(options.appId + ':' + options.appSecret)))
             };
+        }
 
         if (options.subVendorAppId) {
             headers['X-Vendor-App-Id'] = options.subVendorAppId;
