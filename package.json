@@ -1,6 +1,6 @@
 {
   "name": "mobilerider-client",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "author": "Armando Perez Marques <armando.perez@mobilerider.com>",
   "description": "MobileRider Networks API client for Javascript",
   "repository": {
