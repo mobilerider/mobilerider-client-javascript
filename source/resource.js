@@ -35,11 +35,17 @@ var Resource = (function () {
         return true;
     };
 
-    Resource.prototype.get = function (id) {
+    Resource.prototype.get = function (id, data) {
         // Returns a promise that when resolved it contains a Javascript object representing the object returned by the API
-        var self = this;
+        var self = this, args;
         id = self.validateId(id);
-        return self.client.request({ url: self.getUrl(id), method: 'GET' });
+        args = { url: self.getUrl(id), method: 'GET' };
+
+        if (data && Object.getOwnPropertyNames(data).length) {
+            args.data = data;
+        }
+
+        return self.client.request(args);
     };
 
     Resource.prototype.create = function (attributes) {
